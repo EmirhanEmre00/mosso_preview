@@ -1,0 +1,72 @@
+name: Frontend quality
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: frontend-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Exact dependency installation
+        run: npm ci
+      - name: Type safety
+        run: npm run typecheck
+      - name: Formatting
+        run: npm run format:check
+      - name: Cart regression tests
+        run: npm test
+      - name: Production dependency vulnerabilities
+        run: npm audit --omit=dev --audit-level=high
+      - name: Production build
+        run: npm run build
+      - name: Install test browser
+        run: npx playwright install --with-deps chromium firefox webkit
+      - name: Mobile layout and shopping flow
+        run: npm run test:browser
+      - name: Retain browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-failure-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+      - name: HTTP smoke check
+        shell: bash
+        run: |
+          npm run start > /tmp/mosso.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" || true' EXIT
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3000 > /tmp/mosso.html; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:3000/ogrenme > /dev/null
+          grep -q 'Koleksiyonu keşfet' /tmp/mosso.html
+      - name: Container build
+        run: docker build -t mosso:ci .
+      - name: Container readiness
+        shell: bash
+        run: |
+          docker run -d --name mosso-ci -p 127.0.0.1:3001:3000 mosso:ci
+          trap 'docker logs mosso-ci; docker rm -f mosso-ci' EXIT
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3001 > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
