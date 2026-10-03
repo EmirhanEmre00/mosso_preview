@@ -104,8 +104,7 @@ export default function SupportWidget({ contact }: { contact: SupportContact | n
                 <p className="support-intro">Bize yaz, ekibimiz inceleyip sana dönüş yapsın.</p>
                 {!endpoint && (
                   <p className="support-unavailable" role="status">
-                    Önizleme: mesaj gönderimi henüz aktif değil. Şimdilik WhatsApp’tan bize
-                    ulaşabilirsin.
+                    WhatsApp’tan bize ulaşabilirsin.
                   </p>
                 )}
                 <form onSubmit={submit}>

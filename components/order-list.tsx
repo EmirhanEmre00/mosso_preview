@@ -62,11 +62,11 @@ function downloadSummary(order: DemoOrder) {
       return `<tr><td>${escape(p.name)}${cancelled ? `<br>${cancelled} adet iptal edildi` : ''}${requested ? `<br>${requested} adet için iade kaydı` : ''}</td><td>${escape(row.color || p.colors[0].name)}</td><td>${escape(row.size)}</td><td>${row.quantity}</td><td>${escape(money(p.price))}</td><td>${escape(money(p.price * row.quantity))}</td></tr>`;
     })
     .join('');
-  const html = `<!doctype html><html lang="tr"><meta charset="utf-8"><title>${escape(order.id)} · mos’so önizleme belgesi</title><style>body{font:15px Arial,sans-serif;color:#28212d;max-width:960px;margin:50px auto;padding:24px}h1{color:#792b87;font-size:42px}table{width:100%;border-collapse:collapse;margin:32px 0}th,td{text-align:left;padding:12px;border-bottom:1px solid #ddd}aside{padding:16px;background:#f5eff7;line-height:1.7}small{color:#666}@media print{body{margin:0}aside{border:1px solid #aaa}}</style><h1>mos’so</h1><p>Modern Original Style ' Stand Out</p><h2>Deneme sipariş özeti</h2><aside><strong>FATURA DEĞİLDİR — MALİ DEĞERİ YOKTUR.</strong><br>Bu belge yalnızca arayüz önizlemesi içindir. Ödeme alınmamış ve gerçek satış yapılmamıştır.</aside><p>Sipariş: ${escape(order.id)}<br>Tarih: ${escape(new Date(order.date).toLocaleString('tr-TR'))}<br>Durum: ${escape(orderLabel(order.status))}</p><table><thead><tr><th>Ürün</th><th>Renk</th><th>Beden</th><th>Adet</th><th>Birim fiyat</th><th>Satır toplamı</th></tr></thead><tbody>${rows}</tbody></table><p>Örnek ürün toplamı: <strong>${escape(money(totals.originalTotal))}</strong><br>Ürün indirimi: ${escape(money(totals.productDiscount))}<br>Kupon indirimi: ${escape(money(totals.discount))}<br>KDV hariç tutar: ${escape(money(totals.netTotal))}<br>KDV (%${totals.vatRate} · örnek): ${escape(money(totals.vat))}<br>Örnek genel toplam (KDV dahil): <strong>${escape(money(totals.total))}</strong><br>Ödeme yöntemi: ${escape(order.paymentMethod || 'Kredi Kartı')}<br>Kargo (önizleme): 0 TL<br>Gerçek tahsilat: <strong>0 TL</strong></p><small>Gerçek fatura, vergi hesaplaması ve fatura numarası oluşturulmamıştır. Bu belgeyi tarayıcının Yazdır → PDF olarak kaydet seçeneğiyle saklayabilirsin.</small></html>`;
+  const html = `<!doctype html><html lang="tr"><meta charset="utf-8"><title>${escape(order.id)} · mos’so sipariş belgesi</title><style>body{font:15px Arial,sans-serif;color:#28212d;max-width:960px;margin:50px auto;padding:24px}h1{color:#792b87;font-size:42px}table{width:100%;border-collapse:collapse;margin:32px 0}th,td{text-align:left;padding:12px;border-bottom:1px solid #ddd}aside{padding:16px;background:#f5eff7;line-height:1.7}small{color:#666}@media print{body{margin:0}aside{border:1px solid #aaa}}</style><h1>mos’so</h1><p>Modern Original Style ' Stand Out</p><h2>Sipariş özeti</h2><p>Sipariş: ${escape(order.id)}<br>Tarih: ${escape(new Date(order.date).toLocaleString('tr-TR'))}<br>Durum: ${escape(orderLabel(order.status))}</p><table><thead><tr><th>Ürün</th><th>Renk</th><th>Beden</th><th>Adet</th><th>Birim fiyat</th><th>Satır toplamı</th></tr></thead><tbody>${rows}</tbody></table><p>Ürünler toplamı: <strong>${escape(money(totals.originalTotal))}</strong><br>Ürün indirimi: ${escape(money(totals.productDiscount))}<br>Kupon indirimi: ${escape(money(totals.discount))}<br>KDV hariç tutar: ${escape(money(totals.netTotal))}<br>KDV (%${totals.vatRate}): ${escape(money(totals.vat))}<br>Genel toplam (KDV dahil): <strong>${escape(money(totals.total))}</strong><br>Ödeme yöntemi: ${escape(order.paymentMethod || 'Kredi Kartı')}<br>Kargo: 0 TL</p><small>Bu belgeyi PDF olarak kaydedebilirsin.</small></html>`;
   const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${order.id}-onizleme-ozeti.html`;
+  a.download = `${order.id}-siparis-ozeti.html`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -129,7 +129,7 @@ export default function OrderList({
     return (
       <div className="account-empty">
         <Package size={40} />
-        <h3>Bu deneme siparişi bulunamadı.</h3>
+        <h3>Sipariş bulunamadı.</h3>
         <p>Sipariş kayıtları yalnızca oluşturuldukları tarayıcı oturumunda tutulur.</p>
         <a className="text-link" href={sitePath('/siparislerim/')}>
           Sipariş listesine dön
@@ -167,11 +167,6 @@ export default function OrderList({
             </p>
           </div>
         </header>
-        <p className="checkout-note">
-          {detail.example
-            ? 'Örnek sipariş · Adres ve kargo bilgileri temsilidir.'
-            : 'Deneme siparişi · Gerçek ödeme ve kargo işlemi yapılmaz.'}
-        </p>
         <OrderProgress status={detail.status} />
         {cancelledCount > 0 && (
           <p className="order-partial-status">
@@ -326,10 +321,8 @@ export default function OrderList({
                 {trackingOpen && (
                   <p className="shipment-preview" role="status">
                     {detail.status === 'delivered'
-                      ? 'Örnek durum: ürün teslim edildi.'
-                      : 'Örnek durum: ürün teslimat yolunda.'}{' '}
-                    Gerçek kargo takibi henüz bağlı değil; bu takip numarasıyla gerçek gönderi
-                    sorgulanamaz.
+                      ? 'Ürün teslim edildi.'
+                      : 'Ürün teslimat yolunda.'}
                   </p>
                 )}
                 {!detail.shipment?.trackingNumber && detail.status !== 'cancelled' && (
@@ -341,8 +334,7 @@ export default function OrderList({
                   <MapPin size={19} /> Teslimat adresi
                 </h3>
                 <address className="order-address">
-                  {addressText(detail.deliveryAddress) ||
-                    'Bu eski deneme siparişinin adres kaydı bulunmuyor.'}
+                  {addressText(detail.deliveryAddress) || 'Teslimat adresi bulunmuyor.'}
                 </address>
                 {detail.deliveryAddress?.phone && <p>{detail.deliveryAddress.phone}</p>}
                 <small>Sipariş oluşturulurken seçilen adres.</small>
@@ -352,10 +344,8 @@ export default function OrderList({
                   <FileText size={19} /> Fatura adresi
                 </h3>
                 <address className="order-address">
-                  {detail.billingAddress ||
-                    'Bu eski deneme siparişinin fatura adresi kaydı bulunmuyor.'}
+                  {detail.billingAddress || 'Fatura adresi bulunmuyor.'}
                 </address>
-                <small>Gerçek fatura henüz düzenlenmedi.</small>
               </section>
             </div>
           </section>
@@ -386,16 +376,16 @@ export default function OrderList({
                   <span>{money(detailTotals?.netTotal ?? 0)}</span>
                 </p>
                 <p className="checkout-tax">
-                  <span>KDV (%{detailTotals?.vatRate} · örnek)</span>
+                  <span>KDV (%{detailTotals?.vatRate})</span>
                   <span>{money(detailTotals?.vat ?? 0)}</span>
                 </p>
                 <p>
-                  <span>Kargo (örnek)</span>
+                  <span>Kargo</span>
                   <span>0 TL</span>
                 </p>
                 <p>
                   <strong>
-                    Örnek toplam <small>KDV dahil</small>
+                    Toplam <small>KDV dahil</small>
                   </strong>
                   <strong>{money(detailTotals?.total ?? 0)}</strong>
                 </p>
@@ -419,24 +409,19 @@ export default function OrderList({
                   </span>
                   <strong>{detail.paymentMethod || 'Kredi Kartı'}</strong>
                 </p>
-                <small>Önizleme · Tahsil edilen: 0 TL. Kart bilgileri kaydedilmedi.</small>
               </div>
             </section>
             <section className="order-documents">
               <h3>
                 <FileText size={19} /> Fatura & belgeler
               </h3>
-              <p>
-                Gerçek satış yapılmadığından resmi fatura düzenlenmedi. Canlı fatura entegrasyonu
-                eklendiğinde belgen burada görünecek.
-              </p>
               <button disabled className="document-disabled">
                 Fatura henüz mevcut değil
               </button>
               <button className="text-link" onClick={() => downloadSummary(detail)}>
-                <Download size={16} /> Önizleme belgesini indir
+                <Download size={16} /> Sipariş belgesini indir
               </button>
-              <small>HTML belge · Fatura değildir. Tarayıcıdan PDF olarak yazdırılabilir.</small>
+              <small>Belgeyi PDF olarak kaydedebilirsin.</small>
             </section>
           </aside>
         </div>
@@ -497,27 +482,17 @@ export default function OrderList({
       <div className="account-empty">
         <Package size={40} />
         <h3>İlk seçiminle başlayacak.</h3>
-        <p>
-          Henüz deneme siparişin yok. Alışverişini tamamladığında ürünlerini burada görebilirsin.
-        </p>
+        <p>Henüz siparişin yok. Alışverişini tamamladığında ürünlerini burada görebilirsin.</p>
         <div className="order-empty-actions">
           <button className="primary" onClick={onShop}>
             Alışverişe dön <ArrowRight size={17} />
-          </button>
-          <button className="text-link order-examples" onClick={onExamples}>
-            Örnek sipariş aşamalarını incele
           </button>
         </div>
       </div>
     );
   return (
     <div className="order-list">
-      <p className="checkout-note">
-        {orders.length} deneme siparişi · Tahsilat ve gerçek kargo işlemi yapılmaz.
-      </p>
-      <button className="text-link order-examples" onClick={onExamples}>
-        Örnek sipariş aşamalarını ekle
-      </button>
+      <p className="checkout-note">{orders.length} sipariş</p>
       {orders.map((order) => (
         <a
           className="order-entry order-entry-link"

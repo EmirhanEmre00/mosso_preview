@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
+  ArrowLeft,
   Check,
   ShoppingBag,
   Truck,
@@ -22,6 +23,7 @@ import PhoneInput from './phone-input';
 import LocationFields from './location-fields';
 import { validAddress } from '@/lib/contact-validation.mjs';
 import './checkout-mobile.css';
+import { sitePath } from '@/lib/site-path';
 export default function CheckoutPage({
   cart,
   signedIn,
@@ -66,10 +68,29 @@ export default function CheckoutPage({
   const [sameBilling, setSameBilling] = useState(true);
   const [billingId, setBillingId] = useState<number | null>(null);
   const billingAddress = addresses.find((address) => address.id === billingId);
-  const [scenario, setScenario] = useState('success');
   const [error, setError] = useState('');
   const [completed, setCompleted] = useState('');
-  const [productsOpen, setProductsOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [mobileStep, setMobileStep] = useState<'cart' | 'payment'>('cart');
+  const goToMobileStep = (step: 'cart' | 'payment') => {
+    setMobileStep(step);
+    setSummaryOpen(false);
+    setError('');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+  const cartCouponField = useRef<HTMLInputElement>(null);
+  const mobileSummaryToggle = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!summaryOpen) return;
+    const dismiss = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSummaryOpen(false);
+        mobileSummaryToggle.current?.focus({ preventScroll: true });
+      }
+    };
+    window.addEventListener('keydown', dismiss);
+    return () => window.removeEventListener('keydown', dismiss);
+  }, [summaryOpen]);
   const submitPanel = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const panel = submitPanel.current;
@@ -109,26 +130,23 @@ export default function CheckoutPage({
     const applied = previewTotals(cart, products, couponInput).coupon;
     setCouponError(!applied);
     if (!applied) {
-      setCouponMessage('Bu kod önizlemede geçerli değil. MOSSO10 kodunu deneyebilirsin.');
+      setCouponMessage('Bu kupon kodu geçerli değil. Kodunu kontrol edip tekrar dene.');
       return;
     }
     setCoupon(applied);
     setCouponInput('');
-    setCouponMessage('MOSSO10 uygulandı · %10 örnek indirim.');
+    setCouponMessage('MOSSO10 uygulandı · %10 indirim.');
   };
   if (completed)
     return (
       <section ref={completionSection} className="wrap checkout-page checkout-complete">
         <Check size={42} />
-        <p className="eyebrow">ÖNİZLEME TAMAMLANDI</p>
+        <p className="eyebrow">TEŞEKKÜR EDERİZ</p>
         <h1 ref={completionHeading} tabIndex={-1}>
           Siparişiniz alındı.
         </h1>
         <p>
-          Deneme siparişin: <strong>{completed}</strong>
-        </p>
-        <p>
-          Ödeme alınmadı; ürünler gönderilmeyecek. Sipariş yalnızca bu tarayıcı oturumunda tutulur.
+          Sipariş numaran: <strong>{completed}</strong>
         </p>
         <button className="primary" onClick={onOrders}>
           Siparişlerime git <ArrowRight size={18} />
@@ -146,17 +164,31 @@ export default function CheckoutPage({
       </section>
     );
   return (
-    <section className="wrap checkout-page">
+    <section className="wrap checkout-page" data-mobile-step={mobileStep}>
+      <header className="mobile-checkout-header">
+        <div className="mobile-checkout-progress" aria-hidden="true">
+          <span style={{ width: mobileStep === 'cart' ? '50%' : '100%' }} />
+        </div>
+        <button
+          type="button"
+          aria-label={mobileStep === 'cart' ? 'Alışverişe dön' : 'Sepet özetine dön'}
+          onClick={() => (mobileStep === 'cart' ? onBack() : goToMobileStep('cart'))}
+        >
+          <ArrowLeft size={19} />
+        </button>
+        <h2>
+          {mobileStep === 'cart'
+            ? `Sepet özeti (${cart.reduce((n, r) => n + r.quantity, 0)})`
+            : 'Teslimat ve ödeme'}
+        </h2>
+        <span className="mobile-checkout-brand">mos’so</span>
+      </header>
       <p className="eyebrow">MOS’SO / ALIŞVERİŞ</p>
       <h1>Seçimlerini tamamla.</h1>
-      <p className="checkout-note">
-        Deneme alışverişi · Gerçek ödeme alınmaz. Sipariş adresleri yalnızca bu tarayıcı oturumunda
-        saklanır, sunucuya gönderilmez.
-      </p>
       {!signedIn ? (
         <div className="checkout-login">
           <h2>Önce hesabına geç.</h2>
-          <p>Siparişini aynı önizleme oturumunda takip edebilmek için giriş yap.</p>
+          <p>Siparişlerini takip etmek ve kayıtlı adreslerini kullanmak için giriş yap.</p>
           <button className="primary" onClick={onLogin}>
             Giriş yap ve devam et <ArrowRight size={18} />
           </button>
@@ -170,12 +202,6 @@ export default function CheckoutPage({
             if (editingAddress || selectedAddress === null) {
               setError('Devam etmek için teslimat adresini kaydet veya kayıtlı bir adres seç.');
               addressEditor.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              return;
-            }
-            if (scenario === 'failure') {
-              setError(
-                'Deneme ödemesi başarısız. Sipariş oluşturulmadı ve sepetin korundu. Ödeme bölümünden başarılı senaryoyu seçerek tekrar deneyebilirsin.',
-              );
               return;
             }
             if (!validAddress({ ...delivery, title: addressTitle })) {
@@ -221,29 +247,120 @@ export default function CheckoutPage({
           }}
         >
           <div className="checkout-main">
-            <section className="checkout-section" aria-labelledby="checkout-products-title">
+            <section
+              className="checkout-section checkout-cart-section"
+              aria-labelledby="checkout-products-title"
+            >
               <div className="checkout-products-heading">
                 <h2 id="checkout-products-title">
                   Sepetindeki ürünler{' '}
                   <small>({cart.reduce((n, r) => n + r.quantity, 0)} ürün)</small>
                 </h2>
-                <button
-                  type="button"
-                  className="checkout-products-toggle"
-                  aria-label={
-                    productsOpen ? 'Sepetteki ürünleri gizle' : 'Sepetteki ürünleri göster'
-                  }
-                  aria-expanded={productsOpen}
-                  aria-controls="checkout-products-list"
-                  onClick={() => setProductsOpen((open) => !open)}
-                >
-                  <ChevronDown size={18} />
-                </button>
               </div>
-              <div id="checkout-products-list" data-expanded={productsOpen}>
-                <OrderProducts rows={cart} onChange={onCartChange} />
+              <div id="checkout-products-list">
+                <OrderProducts rows={cart} onChange={onCartChange} linkProducts />
               </div>
             </section>
+            <section className="mobile-cart-extras" aria-label="Kupon ve öneriler">
+              <div className="mobile-cart-coupon">
+                <div id="mobile-cart-coupon-fields">
+                  <label htmlFor="mobile-cart-coupon-code">
+                    <TicketPercent size={15} aria-hidden="true" /> Kupon kodu
+                  </label>
+                  <div className="checkout-coupon-input">
+                    <input
+                      id="mobile-cart-coupon-code"
+                      ref={cartCouponField}
+                      value={couponInput}
+                      maxLength={30}
+                      placeholder="Kupon kodunu gir"
+                      onChange={(event) => setCouponInput(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          applyCoupon();
+                        }
+                      }}
+                    />
+                    <button type="button" onClick={applyCoupon}>
+                      Uygula
+                    </button>
+                  </div>
+                  {couponMessage && (couponError || !coupon) && (
+                    <p
+                      className={couponError ? 'coupon-feedback coupon-invalid' : 'coupon-feedback'}
+                      role="status"
+                    >
+                      {couponMessage}
+                    </p>
+                  )}
+                  {coupon && (
+                    <div className="applied-coupon">
+                      <span>
+                        <Check size={14} /> {coupon} · %10 indirim uygulandı
+                      </span>
+                      <button
+                        type="button"
+                        aria-label="Kuponu kaldır"
+                        onClick={() => {
+                          setCoupon('');
+                          setCouponMessage('Kupon kaldırıldı.');
+                          setCouponError(false);
+                        }}
+                      >
+                        <X size={15} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="mobile-checkout-recommendations">
+                <h2>Bunları da sevebilirsin.</h2>
+                <div>
+                  {products
+                    .filter((product) => !cart.some((row) => row.id === product.id))
+                    .slice(0, 4)
+                    .map((product) => (
+                      <a
+                        key={product.id}
+                        href={sitePath(`/?urun=${encodeURIComponent(product.id)}`)}
+                      >
+                        <img src={sitePath(product.image)} alt={product.name} loading="lazy" />
+                        <span>{product.name}</span>
+                        <strong>{money(product.price)}</strong>
+                      </a>
+                    ))}
+                </div>
+              </div>
+            </section>
+            <details className="checkout-delivery-products" aria-label="Sepetindeki ürünler">
+              <summary>
+                <span>Sepetindeki ürünler ({cart.reduce((n, r) => n + r.quantity, 0)})</span>
+                <ChevronDown size={16} aria-hidden="true" />
+              </summary>
+              <div className="checkout-delivery-edit">
+                <button type="button" onClick={() => goToMobileStep('cart')}>
+                  Sepeti düzenle
+                </button>
+              </div>
+              <ul>
+                {cart.map((row, index) => {
+                  const product = products.find((item) => item.id === row.id);
+                  return product ? (
+                    <li key={`${row.id}-${row.size}-${row.color}-${index}`}>
+                      <img src={sitePath(product.image)} alt={product.name} />
+                      <div>
+                        <strong>{product.name}</strong>
+                        <span>
+                          {row.color || product.colors[0].name} · {row.size} · {row.quantity} adet
+                        </span>
+                      </div>
+                      <strong>{money(product.price * row.quantity)}</strong>
+                    </li>
+                  ) : null;
+                })}
+              </ul>
+            </details>
             <section className="checkout-section" aria-labelledby="delivery-title">
               <div className="checkout-section-title">
                 <span>01</span>
@@ -429,10 +546,8 @@ export default function CheckoutPage({
               <div className="checkout-service">
                 <Truck size={22} />
                 <div>
-                  <strong>Standart teslimat · Önizleme</strong>
-                  <p>
-                    Kargo: 0 TL (örnek). Canlı kargo ücreti ve teslimat süresi henüz belirlenmedi.
-                  </p>
+                  <strong>Standart teslimat</strong>
+                  <p>Aras Kargo · Ücretsiz teslimat</p>
                 </div>
               </div>
             </section>
@@ -480,16 +595,13 @@ export default function CheckoutPage({
                   </small>
                 </div>
               )}
-              <p className="checkout-note">
-                Bu denemede resmi fatura düzenlenmez. Kimlik veya vergi numarası istenmez.
-              </p>
             </section>
             <section className="checkout-section checkout-payment" aria-labelledby="payment-title">
               <div className="checkout-section-title">
                 <span>03</span>
                 <div>
                   <h2 id="payment-title">Ödeme</h2>
-                  <p>Toplamı kontrol et, denemeyi tamamla.</p>
+                  <p>Ödeme yöntemini seç.</p>
                 </div>
               </div>
               <PaymentMethods
@@ -499,30 +611,6 @@ export default function CheckoutPage({
                   setError('');
                 }}
               />
-              <fieldset>
-                <legend>Önizleme senaryosu</legend>
-                <label>
-                  <input
-                    type="radio"
-                    name="payment-scenario"
-                    checked={scenario === 'success'}
-                    onChange={() => {
-                      setScenario('success');
-                      setError('');
-                    }}
-                  />{' '}
-                  Başarılı ödeme senaryosu
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="payment-scenario"
-                    checked={scenario === 'failure'}
-                    onChange={() => setScenario('failure')}
-                  />{' '}
-                  Başarısız ödeme senaryosu
-                </label>
-              </fieldset>
             </section>
             <section
               className="checkout-section checkout-contracts"
@@ -539,34 +627,32 @@ export default function CheckoutPage({
                 <article id="pre-info">
                   <FileText size={20} />
                   <div>
-                    <h3>Ön bilgilendirme — önizleme</h3>
+                    <h3>Ön bilgilendirme formu</h3>
                     <p>
-                      Ürün, renk, beden, adet ve örnek toplam sipariş özetinde gösterilir. Bu
-                      denemede tahsilat veya teslimat yapılmaz. Satıcı bilgileri, gerçek kargo
-                      ücretleri ve teslimat koşulları canlı satıştan önce tamamlanacak.
+                      Seçtiğin ürünler, renk, beden ve adet bilgileri yukarıda; indirimler, KDV ve
+                      teslimat ücreti sipariş özetinde yer alır. Mağazamız: Hacı Mütahir Mahallesi,
+                      İnönü Caddesi, Ereğli / Konya. İletişim: 0532 790 48 80.
                     </p>
                   </div>
                 </article>
                 <article id="distance-contract">
                   <FileText size={20} />
                   <div>
-                    <h3>Mesafeli satış sözleşmesi — taslak alanı</h3>
+                    <h3>Mesafeli satış sözleşmesi</h3>
                     <p>
-                      Henüz gerçek bir sözleşme sunulmuyor. Satıcı ve alıcı bilgilerini, ödeme,
-                      teslimat, cayma ve iade koşullarını içeren nihai metin satış başlamadan önce
-                      eklenecek. Bu alan yalnızca onay akışını gösterir.
+                      Siparişindeki ürünleri, teslimat ve fatura adreslerini, ödeme yöntemini ve
+                      toplam tutarı onaylamadan önce kontrol et. Sipariş ve iade taleplerini
+                      hesabındaki Siparişlerim bölümünden görüntüleyebilirsin.
                     </p>
                   </div>
                 </article>
                 <article id="privacy-info">
                   <FileText size={20} />
                   <div>
-                    <h3>Kişisel veriler — önizleme açıklaması</h3>
+                    <h3>Kişisel veriler</h3>
                     <p>
-                      Bu formdaki iletişim ve adres bilgileri sunucuya gönderilmez. Deneme
-                      siparişinin ürünleri, adresleri, tarih ve numarası bu sekmenin oturumunda
-                      tutulur. Kart bilgileri saklanmaz. Canlı sistemin aydınlatma metni ayrıca
-                      hazırlanacak.
+                      İletişim bilgilerini ve kayıtlı adreslerini Hesabım bölümünden
+                      düzenleyebilirsin. Kart bilgileri kayıtlı adres defterine eklenmez.
                     </p>
                   </div>
                 </article>
@@ -574,110 +660,146 @@ export default function CheckoutPage({
             </section>
           </div>
           <aside className="checkout-summary">
-            <h2>
-              Sipariş özeti <small>({cart.reduce((n, r) => n + r.quantity, 0)} ürün)</small>
-            </h2>
-            <div className="checkout-totals">
-              <p>
-                <span>Ürünler toplamı</span>
-                <strong>{money(totals.originalTotal)}</strong>
-              </p>
-              <p className="checkout-discount">
-                <span>Ürün indirimi</span>
-                <strong>
-                  {totals.productDiscount ? `−${money(totals.productDiscount)}` : money(0)}
-                </strong>
-              </p>
-              <p className="checkout-discount">
-                <span>Kupon indirimi {coupon && `(%10)`}</span>
-                <strong>{totals.discount ? `−${money(totals.discount)}` : money(0)}</strong>
-              </p>
-              <p className="checkout-tax">
-                <span>KDV hariç tutar</span>
-                <span>{money(totals.netTotal)}</span>
-              </p>
-              <p className="checkout-tax">
-                <span>KDV (%{totals.vatRate} · örnek)</span>
-                <span>{money(totals.vat)}</span>
-              </p>
-              <p>
-                <span>Kargo (önizleme)</span>
-                <span>{money(0)}</span>
-              </p>
-              <p className="checkout-grand-total">
-                <strong>
-                  Ödenecek tutar <small>KDV dahil · önizleme</small>
-                </strong>
-                <strong>{money(totals.total)}</strong>
-              </p>
-            </div>
-            <div className="checkout-coupon">
-              <label htmlFor="checkout-coupon-code">
-                <TicketPercent size={18} aria-hidden="true" /> Kupon kodun var mı?
-              </label>
-              <div className="checkout-coupon-input">
-                <input
-                  id="checkout-coupon-code"
-                  value={couponInput}
-                  maxLength={30}
-                  placeholder="Kupon kodunu gir"
-                  autoComplete="off"
-                  aria-describedby="checkout-coupon-help"
-                  onChange={(e) => setCouponInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      applyCoupon();
-                    }
-                  }}
-                />
-                <button type="button" onClick={applyCoupon}>
-                  Uygula
+            <div
+              id="checkout-summary-details"
+              className="checkout-summary-details"
+              data-expanded={summaryOpen}
+            >
+              <div className="checkout-summary-heading">
+                <h2>
+                  Sipariş özeti <small>({cart.reduce((n, r) => n + r.quantity, 0)} ürün)</small>
+                </h2>
+                <button
+                  className="checkout-summary-toggle"
+                  type="button"
+                  aria-expanded={summaryOpen}
+                  aria-controls="checkout-summary-details"
+                  aria-label="Sipariş özetini kapat"
+                  onClick={() => setSummaryOpen(false)}
+                >
+                  <X size={18} aria-hidden="true" />
                 </button>
               </div>
-              <small id="checkout-coupon-help">
-                Deneme kodu: <strong>MOSSO10</strong> · %10 indirim
-              </small>
-              {couponMessage && (couponError || !coupon) && (
-                <p
-                  className={couponError ? 'coupon-feedback coupon-invalid' : 'coupon-feedback'}
-                  role="status"
-                >
-                  {couponMessage}
+              <div className="checkout-totals">
+                <div id="checkout-price-breakdown">
+                  <p>
+                    <span>Ürünler toplamı</span>
+                    <strong>{money(totals.originalTotal)}</strong>
+                  </p>
+                  <p className="checkout-discount">
+                    <span>Ürün indirimi</span>
+                    <strong>
+                      {totals.productDiscount ? `−${money(totals.productDiscount)}` : money(0)}
+                    </strong>
+                  </p>
+                  <p className="checkout-discount">
+                    <span>Kupon indirimi {coupon && `(%10)`}</span>
+                    <strong>{totals.discount ? `−${money(totals.discount)}` : money(0)}</strong>
+                  </p>
+                  <p className="checkout-tax">
+                    <span>KDV hariç tutar</span>
+                    <span>{money(totals.netTotal)}</span>
+                  </p>
+                  <p className="checkout-tax">
+                    <span>KDV (%{totals.vatRate})</span>
+                    <span>{money(totals.vat)}</span>
+                  </p>
+                  <p>
+                    <span>Kargo</span>
+                    <span>{money(0)}</span>
+                  </p>
+                </div>
+                <p className="checkout-grand-total">
+                  <strong>
+                    Ödenecek tutar <small>KDV dahil</small>
+                  </strong>
+                  <strong>{money(totals.total)}</strong>
                 </p>
-              )}
-              {coupon && (
-                <div className="applied-coupon">
-                  <span>
-                    <Check size={14} /> {coupon} · %10 indirim uygulandı
-                  </span>
-                  <button
-                    type="button"
-                    aria-label="Kuponu kaldır"
-                    onClick={() => {
-                      setCoupon('');
-                      setCouponMessage('Kupon kaldırıldı.');
-                      setCouponError(false);
+              </div>
+              <div className="checkout-coupon">
+                <label htmlFor="checkout-coupon-code">
+                  <TicketPercent size={18} aria-hidden="true" /> Kupon kodun var mı?
+                </label>
+                <div className="checkout-coupon-input">
+                  <input
+                    id="checkout-coupon-code"
+                    value={couponInput}
+                    maxLength={30}
+                    placeholder="Kupon kodunu gir"
+                    autoComplete="off"
+                    onChange={(e) => setCouponInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        applyCoupon();
+                      }
                     }}
-                  >
-                    <X size={15} />
+                  />
+                  <button type="button" onClick={applyCoupon}>
+                    Uygula
                   </button>
                 </div>
-              )}
-            </div>
-            <div className="checkout-summary-method">
-              <span>Ödeme yöntemi</span>
-              <strong>{paymentMethod}</strong>
+                {couponMessage && (couponError || !coupon) && (
+                  <p
+                    className={couponError ? 'coupon-feedback coupon-invalid' : 'coupon-feedback'}
+                    role="status"
+                  >
+                    {couponMessage}
+                  </p>
+                )}
+                {coupon && (
+                  <div className="applied-coupon">
+                    <span>
+                      <Check size={14} /> {coupon} · %10 indirim uygulandı
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Kuponu kaldır"
+                      onClick={() => {
+                        setCoupon('');
+                        setCouponMessage('Kupon kaldırıldı.');
+                        setCouponError(false);
+                      }}
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="checkout-summary-method">
+                <span>Ödeme yöntemi</span>
+                <strong>{paymentMethod}</strong>
+              </div>
             </div>
             <div className="checkout-summary-actions">
               <div ref={submitPanel} className="checkout-submit-panel">
+                <div className="checkout-dock-heading">
+                  <span>
+                    <LockKeyhole size={12} aria-hidden="true" /> Siparişini tamamla
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      goToMobileStep('cart');
+                      requestAnimationFrame(() => {
+                        cartCouponField.current?.scrollIntoView({
+                          block: 'center',
+                          behavior: 'smooth',
+                        });
+                        cartCouponField.current?.focus({ preventScroll: true });
+                      });
+                    }}
+                  >
+                    <TicketPercent size={14} aria-hidden="true" />{' '}
+                    {coupon ? 'Kuponu düzenle' : 'Kupon ekle'}
+                  </button>
+                </div>
                 <div className="checkout-consent">
                   <input
                     id="checkout-agreement"
                     type="checkbox"
                     required
                     aria-labelledby="checkout-agreement-text"
-                    aria-describedby="checkout-agreement-preview"
                   />
                   <div id="checkout-agreement-text">
                     <a href="#pre-info">
@@ -690,22 +812,39 @@ export default function CheckoutPage({
                     <label htmlFor="checkout-agreement">’ni okudum, onaylıyorum.</label>
                   </div>
                 </div>
-                <p id="checkout-agreement-preview" className="checkout-note">
-                  Önizleme · Belgeler taslaktır, gerçek tahsilat 0 TL.
-                </p>
                 {error && (
                   <p role="alert" className="checkout-error">
                     {error}
                   </p>
                 )}
                 <div className="checkout-submit-row">
-                  <div className="mobile-checkout-total">
-                    <span>Ödenecek tutar</span>
+                  <button
+                    type="button"
+                    className="mobile-checkout-total"
+                    ref={mobileSummaryToggle}
+                    aria-expanded={summaryOpen}
+                    aria-controls="checkout-summary-details"
+                    aria-label={summaryOpen ? 'Sipariş özetini gizle' : 'Sipariş özetini göster'}
+                    onClick={() => setSummaryOpen((open) => !open)}
+                  >
+                    <span>
+                      Toplam <ChevronDown size={13} aria-hidden="true" />
+                    </span>
+                    {totals.originalTotal > totals.total && (
+                      <del>{money(totals.originalTotal)}</del>
+                    )}
                     <strong>{money(totals.total)}</strong>
-                    <small>KDV dahil</small>
-                  </div>
+                    <small>Sipariş özeti</small>
+                  </button>
                   <button className="primary" type="submit">
                     Ödeme yap <LockKeyhole size={18} />
+                  </button>
+                  <button
+                    className="primary checkout-mobile-continue"
+                    type="button"
+                    onClick={() => goToMobileStep('payment')}
+                  >
+                    Sepeti onayla <ArrowRight size={16} />
                   </button>
                 </div>
               </div>
@@ -717,13 +856,9 @@ export default function CheckoutPage({
                 </summary>
                 <div>
                   <p>
-                    Bu önizlemede gerçek ödeme alınmaz; kart alanları gönderilmez veya saklanmaz.
+                    Kart bilgilerin kaydedilmez. Ödeme öncesinde adresini, seçtiğin ürünleri ve
+                    toplam tutarı kontrol edebilirsin.
                   </p>
-                  <p>
-                    Canlı sürümde ödeme, seçtiğin sağlayıcının güvenli ödeme formuyla yapılacak.
-                    Kart bilgilerinin mağaza veritabanına kaydedilmesi planlanmıyor.
-                  </p>
-                  <small>Canlı ödeme ve güvenlik bağlantıları henüz aktif değil.</small>
                 </div>
               </details>
               <button type="button" className="text-link" onClick={onBack}>

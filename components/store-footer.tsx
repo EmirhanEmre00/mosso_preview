@@ -180,14 +180,8 @@ export default function StoreFooter({
           </div>
         </section>
       </div>
-      <div className="footer-note footer-preview wrap">
-        <p>Tasarım önizlemesi. Ürün, görsel ve fiyatlar örnektir; gerçek satış yapılmaz.</p>
-      </div>
       <div className="footer-bottom wrap">
         <span>© {new Date().getFullYear()} mos’so</span>
-        <a href={sitePath('/ogrenme/')} target="_blank" rel="noreferrer">
-          Proje rehberi <ArrowUpRight size={12} />
-        </a>
         <span>Türkiye / Türkçe / TRY ₺</span>
       </div>
     </footer>

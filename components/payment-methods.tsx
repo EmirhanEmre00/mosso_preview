@@ -36,21 +36,11 @@ export default function PaymentMethods({
       {value === 'Kredi Kartı' ? (
         <CardPaymentFields />
       ) : (
-        <div
-          className="payment-provider-preview"
-          role="region"
-          aria-label={`${value} ödeme önizlemesi`}
-        >
+        <div className="payment-provider-preview" role="region" aria-label={`${value} ile ödeme`}>
           <ArrowUpRight size={26} aria-hidden="true" />
           <div>
             <h3>{value} ile ödeme</h3>
-            <p>
-              Canlı ödeme bağlantısı kurulduğunda işlemini {value} üzerinden tamamlayabileceksin.
-            </p>
-            <small>
-              Şimdilik seçimini deneme siparişinde gösteriyoruz; dışarı yönlendirme ve gerçek
-              tahsilat yapılmaz.
-            </small>
+            <p>Seçilen ödeme yöntemi: {value}.</p>
           </div>
         </div>
       )}

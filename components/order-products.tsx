@@ -10,10 +10,12 @@ export default function OrderProducts({
   rows,
   onChange,
   order,
+  linkProducts = false,
 }: {
   rows: OrderRow[];
   onChange?: (rows: OrderRow[]) => void;
   order?: DemoOrder;
+  linkProducts?: boolean;
 }) {
   const requests: ReturnRequest[] = order ? getReturnRequests(order) : [];
   return (
@@ -54,10 +56,26 @@ export default function OrderProducts({
           : 0;
         return (
           <div className="order-product-row" key={cartRowKey(row)}>
-            <img src={sitePath(p.image)} alt={p.name} loading="lazy" />
+            {linkProducts ? (
+              <a
+                className="order-product-image"
+                href={sitePath(`/?urun=${encodeURIComponent(p.id)}`)}
+                aria-label={`${p.name} ürününü incele`}
+              >
+                <img src={sitePath(p.image)} alt={p.name} loading="lazy" />
+              </a>
+            ) : (
+              <img src={sitePath(p.image)} alt={p.name} loading="lazy" />
+            )}
             <div className="order-product-copy">
               <small>{p.category}</small>
-              <strong>{p.name}</strong>
+              <strong>
+                {linkProducts ? (
+                  <a href={sitePath(`/?urun=${encodeURIComponent(p.id)}`)}>{p.name}</a>
+                ) : (
+                  p.name
+                )}
+              </strong>
               <div className="order-variant">
                 <span>
                   <i style={{ background: color.hex }} aria-hidden="true" />
@@ -85,7 +103,6 @@ export default function OrderProducts({
                       return !!existing && existing.quantity + row.quantity > 10;
                     }}
                   />
-                  <small>Görsel: {p.colors[0].name} renk örneği.</small>
                 </div>
               )}
               {onChange && (

@@ -88,9 +88,7 @@ export default function AccountProfile({
                 email: profile.email,
                 phone: profile.phone,
               });
-              setProfileMessage(
-                'Bilgilerin önizlemede güncellendi. Kalıcı hesap kaydı henüz bağlı değil.',
-              );
+              setProfileMessage('Bilgilerin güncellendi.');
             }}
           >
             {(
@@ -172,9 +170,7 @@ export default function AccountProfile({
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              setPreferencesMessage(
-                'Tercihlerin önizlemede güncellendi. E-posta veya SMS gönderimi yapılmaz.',
-              );
+              setPreferencesMessage('İletişim tercihlerin güncellendi.');
             }}
           >
             <div className="communication-options">
@@ -199,10 +195,6 @@ export default function AccountProfile({
                 </div>
               ))}
             </div>
-            <p className="profile-preference-note">
-              Bu seçimler yalnızca önizleme içindir. Ticari ileti izinleri canlı üyelik sistemiyle
-              bağlanacak.
-            </p>
             <button className="primary" type="submit">
               Tercihleri kaydet
             </button>
@@ -243,9 +235,7 @@ export default function AccountProfile({
             }
             form.reset();
             setPasswordFormKey((key) => key + 1);
-            setPasswordMessage(
-              'Form kontrol edildi. Önizlemede gerçek şifre değiştirilmedi; şifreler kaydedilmedi.',
-            );
+            setPasswordMessage('Şifre değiştirme şu anda kullanılamıyor.');
           }}
           onInput={(e) => {
             e.currentTarget
@@ -273,7 +263,6 @@ export default function AccountProfile({
             <button className="primary" type="submit">
               Şifreyi güncelle
             </button>
-            <small>Bu önizleme şifrelerini göndermez veya saklamaz.</small>
           </div>
           {passwordMessage && (
             <p className="account-feedback profile-password-message" role="status">

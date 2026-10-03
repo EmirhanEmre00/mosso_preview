@@ -263,7 +263,7 @@ export default function Storefront({
       sessionStorage.setItem(ORDERS_KEY, JSON.stringify(next));
       if (successNotice) setNotice(successNotice);
     } catch {
-      setNotice('Tarayıcı kaydı kapalı; deneme siparişin yalnızca bu sayfa açıkken korunur.');
+      setNotice('Tarayıcı kaydı kapalı; siparişin yalnızca bu sayfa açıkken korunur.');
     }
   };
   const completeOrder = (selection: CheckoutSelection) => {
@@ -330,7 +330,7 @@ export default function Storefront({
     const variant = { id: active.id, size, color };
     const existing = cart.find((row) => cartRowKey(row) === cartRowKey(variant));
     if (existing && existing.quantity >= 10) {
-      setNotice('Önizlemede bir üründen en fazla 10 adet ekleyebilirsin.');
+      setNotice('Bir üründen en fazla 10 adet ekleyebilirsin.');
       return;
     }
     setCart((previous) =>
@@ -950,23 +950,19 @@ export default function Storefront({
                     />
                   </button>
                 </div>
-                <p className="preview-note">Önizleme ürünü · Görsel ve fiyat temsilidir.</p>
                 <details>
                   <summary>
                     Ürün hakkında <Plus size={17} />
                   </summary>
-                  <p>
-                    {active.description} Gerçek ürünün kumaş, ölçü ve bakım bilgileri koleksiyon
-                    eklenirken tamamlanacak.
-                  </p>
+                  <p>{active.description}</p>
                 </details>
                 <details>
                   <summary>
                     Teslimat ve iade <Plus size={17} />
                   </summary>
                   <p>
-                    Bu sürümde sipariş ve ödeme alınmaz. Gerçek teslimat ve iade koşulları satışa
-                    açılmadan önce burada yayınlanacak.
+                    Sipariş durumunu hesabından takip edebilir, iade talebini Siparişlerim
+                    bölümünden oluşturabilirsin. Soruların için mağazamızla iletişime geç.
                   </p>
                 </details>
               </div>
@@ -1008,15 +1004,17 @@ export default function Storefront({
           </section>
         )}
       </main>
-      <StoreFooter
-        category={(cat) => navigate('collection', cat)}
-        home={() => navigate('home')}
-        favorites={() => navigate('favorites')}
-        cart={() => {
-          setCartOpen(true);
-        }}
-      />
-      {!cartOpen && !menuOpen && !filtersOpen && !searchOpen && (
+      {view !== 'checkout' && (
+        <StoreFooter
+          category={(cat) => navigate('collection', cat)}
+          home={() => navigate('home')}
+          favorites={() => navigate('favorites')}
+          cart={() => {
+            setCartOpen(true);
+          }}
+        />
+      )}
+      {view !== 'checkout' && !cartOpen && !menuOpen && !filtersOpen && !searchOpen && (
         <SupportWidget contact={signedIn ? supportContact : null} />
       )}
       <CatalogFilters
@@ -1127,7 +1125,7 @@ export default function Storefront({
                   <span>Ara toplam</span>
                   <strong>{money(total)}</strong>
                 </div>
-                <p>Örnek fiyatlar · Kargo hesaplanmaz.</p>
+                <p>KDV dahil</p>
                 <button className="primary" onClick={startCheckout}>
                   Ödeme adımlarına geç <ArrowRight size={18} />
                 </button>

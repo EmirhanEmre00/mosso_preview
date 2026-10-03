@@ -17,7 +17,7 @@ const messages: Record<ReturnRequest['status'], { title: string; detail: string;
   },
   completed: {
     title: 'İade sürecin tamamlandı',
-    detail: 'Önizleme durumu · Gerçek para iadesi yapılmadı.',
+    detail: 'İade sürecin tamamlandı.',
     step: 2,
   },
   rejected: {

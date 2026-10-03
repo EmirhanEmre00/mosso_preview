@@ -9,7 +9,6 @@ export default function SocialLoginButtons({ onLogin }: { onLogin: (remember?: b
       <div className="social-login-buttons">
         <button
           type="button"
-          aria-describedby="social-login-preview"
           onClick={(e) =>
             onLogin(
               (
@@ -42,7 +41,6 @@ export default function SocialLoginButtons({ onLogin }: { onLogin: (remember?: b
         </button>
         <button
           type="button"
-          aria-describedby="social-login-preview"
           onClick={(e) =>
             onLogin(
               (
@@ -63,10 +61,6 @@ export default function SocialLoginButtons({ onLogin }: { onLogin: (remember?: b
           Facebook ile giriş yap
         </button>
       </div>
-      <small id="social-login-preview">
-        Önizleme: Bu düğmeler deneme hesabını açar. Google ve Facebook bağlantıları henüz aktif
-        değil.
-      </small>
     </div>
   );
 }

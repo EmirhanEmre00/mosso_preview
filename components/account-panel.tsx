@@ -81,8 +81,8 @@ export default function AccountPanel({
     }
     setMessage(
       mode === 'reset'
-        ? 'Önizleme: şifre yenileme e-postası gönderilmedi. Bu işlem üyelik sistemi bağlandığında açılacak.'
-        : 'Form kontrol edildi. Bu bir önizleme; üyelik oluşturulmadı ve giriş yapılmadı.',
+        ? 'Şifre yenileme şu anda kullanılamıyor. Yardım için mağazamızla iletişime geç.'
+        : 'Bilgilerini kontrol edip tekrar dene.',
     );
   };
 
@@ -112,11 +112,6 @@ export default function AccountPanel({
               ))}
           </nav>
         )}
-        <p className="account-preview">
-          Önizleme alanı · Giriş, üyelik ve sipariş işlemleri temsilidir; gerçek bir hesap
-          oluşturulmaz. Profil ve adres defteri denemeleri yenilemede sıfırlanır; sipariş kayıtları
-          bu tarayıcı oturumunda korunur.
-        </p>
         <div
           className={`account-content ${section === 'Giriş yap / Kayıt ol' ? 'account-content-auth' : ''}`}
         >
@@ -204,13 +199,12 @@ export default function AccountPanel({
                 )}
                 <button className="primary" type="submit">
                   {mode === 'register'
-                    ? 'Üyelik önizlemesine geç'
+                    ? 'Kayıt ol'
                     : mode === 'reset'
-                      ? 'Yenileme formunu dene'
-                      : 'Önizleme hesabına giriş yap'}
+                      ? 'Şifremi yenile'
+                      : 'Giriş yap'}
                   <ArrowRight size={17} />
                 </button>
-                <small>Bu önizleme formu bilgilerini göndermez; şifren kaydedilmez.</small>
                 {mode !== 'reset' && <SocialLoginButtons onLogin={onLogin} />}
               </form>
             </>
@@ -267,7 +261,7 @@ export default function AccountPanel({
                         onClick={() => {
                           setAddresses(addresses.filter((a) => a.id !== address.id));
                           if (editing === address.id) setEditing(null);
-                          setMessage('Deneme adresi kaldırıldı.');
+                          setMessage('Adres kaldırıldı.');
                         }}
                       >
                         <Trash2 size={15} /> Sil
@@ -305,7 +299,7 @@ export default function AccountPanel({
                         : addresses.map((a) => (a.id === editing ? entry : a)),
                     );
                     setEditing(null);
-                    setMessage('Adres önizlemeye eklendi; sunucuya gönderilmedi.');
+                    setMessage('Adres kaydedildi.');
                   }}
                 >
                   {(
@@ -352,7 +346,7 @@ export default function AccountPanel({
                   </label>
                   <div className="account-wide account-form-actions">
                     <button type="submit" className="primary">
-                      Adresi önizlemede kaydet
+                      Adresi kaydet
                     </button>
                     <button type="button" onClick={() => setEditing(null)}>
                       Vazgeç

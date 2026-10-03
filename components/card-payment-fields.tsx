@@ -1,6 +1,6 @@
 'use client';
 
-import { CreditCard, Info } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 
 export default function CardPaymentFields() {
   return (
@@ -11,16 +11,8 @@ export default function CardPaymentFields() {
           <h3>Banka / kredi kartı</h3>
           <p>Kart bilgilerini aşağıdan tamamla.</p>
         </div>
-        <span>Önizleme</span>
       </div>
-      <p className="card-payment-notice" id="card-preview-note">
-        <Info size={18} aria-hidden="true" />
-        <span>
-          Gerçek kart bilgilerini girme. Denemek için 4242 4242 4242 4242, 12/30 ve 123
-          kullanabilirsin. Bu alanlar kaydedilmez veya gönderilmez.
-        </span>
-      </p>
-      <div className="account-form card-form" aria-describedby="card-preview-note">
+      <div className="account-form card-form">
         <label className="card-form-wide">
           Kart üzerindeki ad soyad
           <input required autoComplete="off" maxLength={80} placeholder="AD SOYAD" />
@@ -35,7 +27,7 @@ export default function CardPaymentFields() {
             placeholder="0000 0000 0000 0000"
             maxLength={23}
             pattern="(?:[0-9] ?){13,19}"
-            title="13–19 haneli örnek kart numarası gir."
+            title="13–19 haneli kart numarası gir."
             onChange={(e) => {
               e.currentTarget.value = e.currentTarget.value
                 .replace(/\D/g, '')
@@ -73,7 +65,7 @@ export default function CardPaymentFields() {
             placeholder="CVV"
             maxLength={4}
             pattern="[0-9]{3,4}"
-            title="3 veya 4 haneli örnek güvenlik kodu gir."
+            title="3 veya 4 haneli güvenlik kodu gir."
             onChange={(e) => {
               e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 4);
             }}

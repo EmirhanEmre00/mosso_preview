@@ -60,9 +60,8 @@ test('size is required, cart survives reload and checkout opens as a page', asyn
   await expect(dialog).toContainText('₺1.798');
   await page.getByRole('button', { name: 'Ödeme adımlarına geç' }).click();
   await expect(page).toHaveURL(/\/odeme\/?$/);
-  await expect(
-    page.getByText('Deneme alışverişi · Gerçek ödeme alınmaz.', { exact: false }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Seçimlerini tamamla.' })).toBeVisible();
+  await expect(page.getByRole('contentinfo')).toHaveCount(0);
   await page.getByRole('button', { name: 'Sepetim (2)', exact: true }).click();
   await page.getByRole('button', { name: 'Rahat Kesim Uzun Tunik sepetten kaldır' }).click();
   await expect(dialog).toContainText('Güzel seçimlere yer var.');
