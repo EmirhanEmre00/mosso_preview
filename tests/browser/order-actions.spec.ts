@@ -277,6 +277,16 @@ test('mobile checkout moves between cart and delivery while preserving edits and
     );
     await expect(page.getByRole('button', { name: 'Sepeti onayla', exact: true })).toBeInViewport();
   }
+  for (const width of [320, 390, 490]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.evaluate(() =>
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }),
+    );
+    const recommendations = (await page.locator('.mobile-checkout-recommendations').boundingBox())!;
+    const dock = (await page.locator('.checkout-summary').boundingBox())!;
+    expect(dock.y - (recommendations.y + recommendations.height)).toBeGreaterThanOrEqual(0);
+    expect(dock.y - (recommendations.y + recommendations.height)).toBeLessThan(16);
+  }
   await page
     .getByRole('link', { name: 'Rahat Kesim Uzun Tunik ürününü incele', exact: true })
     .click();
