@@ -115,13 +115,31 @@ export default function CheckoutPage({
     };
   }, [signedIn, completed, cart.length]);
   const completionHeading = useRef<HTMLHeadingElement>(null);
+  const completionSection = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!completed) return;
+    const updateTop = () => {
+      const section = completionSection.current;
+      if (section)
+        section.style.setProperty(
+          '--checkout-complete-top',
+          `${section.getBoundingClientRect().top + window.scrollY}px`,
+        );
+    };
+    const header = document.querySelector('.header');
+    const observer = new ResizeObserver(updateTop);
+    if (header) observer.observe(header);
+    window.addEventListener('resize', updateTop);
     const frame = requestAnimationFrame(() => {
       window.scrollTo({ top: 0, behavior: 'instant' });
+      updateTop();
       completionHeading.current?.focus({ preventScroll: true });
     });
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener('resize', updateTop);
+    };
   }, [completed]);
   const [paymentMethod, setPaymentMethod] = useState('Kredi Kartı');
   const [couponInput, setCouponInput] = useState('');
@@ -143,7 +161,7 @@ export default function CheckoutPage({
   };
   if (completed)
     return (
-      <section className="wrap checkout-page checkout-complete">
+      <section ref={completionSection} className="wrap checkout-page checkout-complete">
         <Check size={42} />
         <p className="eyebrow">TEŞEKKÜR EDERİZ</p>
         <h1 ref={completionHeading} tabIndex={-1}>

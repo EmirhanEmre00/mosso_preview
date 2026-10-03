@@ -630,12 +630,18 @@ export default function Storefront({
         {view === 'home' && (
           <>
             <section className="hero wrap">
-              <img
-                className="hero-photo"
-                src={sitePath(hero)}
-                alt="Lila tunik ve başörtülü kadın ile beyaz tişört ve jean giyen kadın"
-                fetchPriority="high"
-              />
+              <picture>
+                <source
+                  media="(max-width: 760px)"
+                  srcSet={sitePath('/images/mosso-editorial-mobile-overlay.webp')}
+                />
+                <img
+                  className="hero-photo"
+                  src={sitePath(hero)}
+                  alt="Lila tunik ve başörtülü kadın ile beyaz tişört ve jean giyen kadın"
+                  fetchPriority="high"
+                />
+              </picture>
               <div className="hero-copy">
                 <motion.div
                   initial={{ opacity: 0, y: 18 }}

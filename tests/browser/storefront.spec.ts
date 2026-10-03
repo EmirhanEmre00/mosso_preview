@@ -83,6 +83,10 @@ test('mobile search and a size filter produce a meaningful empty state', async (
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Aramayı aç' }).click();
+  await expect(page.getByRole('textbox', { name: 'Mobil ürün ara' })).toHaveCSS(
+    'font-size',
+    '16px',
+  );
   await page.getByRole('textbox', { name: 'Mobil ürün ara' }).fill('jean');
   await page.getByRole('button', { name: 'Ara', exact: true }).click();
   await expect(page.getByRole('main')).toContainText('1 ürün');
@@ -96,13 +100,18 @@ test('mobile search and a size filter produce a meaningful empty state', async (
   await expect(page.getByRole('main')).toContainText('Aradığın ürünü bulamadık.');
 });
 
-test('compact mobile hero and footer preserve access to all content', async ({ page }) => {
+test('mobile portrait hero and footer preserve access to all content', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 900 });
   await page.goto('/');
   const hero = await page.locator('.hero').boundingBox();
   const footer = page.getByRole('contentinfo');
   const before = await footer.boundingBox();
-  expect(hero!.height).toBeLessThanOrEqual(490);
+  const photo = await page.locator('.hero-photo').boundingBox();
+  const copy = await page.locator('.hero-copy').boundingBox();
+  expect(photo!.height / photo!.width).toBeCloseTo(16 / 9, 2);
+  expect(photo!.y).toBeCloseTo(hero!.y, 0);
+  expect(copy!.y + copy!.height).toBeLessThan(photo!.y + photo!.height / 2);
+  expect(photo!.y + photo!.height).toBeCloseTo(hero!.y + hero!.height, 0);
   expect(before!.height).toBeLessThan(380);
   const toggle = footer.getByRole('button', { name: 'Koleksiyonu keşfet' });
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');

@@ -37,6 +37,25 @@ input,
 select {
   font: inherit;
 }
+/* Keep editable mobile controls readable without the browser's focus zoom. */
+@media (max-width: 760px) {
+  :where(
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [type='range'],
+      [type='color'],
+      [type='hidden'],
+      [type='button'],
+      [type='submit'],
+      [type='reset']
+    ),
+    textarea,
+    select
+  ) {
+    font-size: 16px !important;
+  }
+}
 button,
 a,
 input,
@@ -2258,15 +2277,26 @@ summary::-webkit-details-marker {
     font-size: 16px;
   }
   .hero {
-    height: 488px;
+    display: block;
+    height: auto;
     margin-top: 12px;
   }
+  .hero > picture {
+    display: block;
+    width: 100%;
+  }
   .hero-copy {
+    position: absolute;
+    inset: 0 0 auto;
     padding: 22px 22px 0;
   }
   .hero-photo {
-    height: 235px;
-    object-position: 77% 12%;
+    position: static;
+    display: block;
+    height: auto;
+    aspect-ratio: 9 / 16;
+    object-fit: contain;
+    object-position: center;
   }
   .hero h1 {
     font-size: 36px;
@@ -2577,12 +2607,6 @@ summary::-webkit-details-marker {
   .hero h1 {
     font-size: 33px;
   }
-  .hero {
-    height: 475px;
-  }
-  .hero-photo {
-    height: 224px;
-  }
   .hero-description {
     font-size: 12px;
   }
@@ -2624,25 +2648,27 @@ summary::-webkit-details-marker {
   }
 }
 @media (max-height: 550px) and (orientation: landscape) {
-  .hero {
-    height: 350px;
-  }
-  .hero-photo {
-    height: 100%;
-    object-position: right top;
-  }
-  .hero-copy {
-    padding: 25px;
-    width: 55%;
-  }
-  .hero h1 {
-    font-size: 35px;
-  }
-  .hero-description {
-    font-size: 12px;
-  }
-  .hero-caption {
-    display: none;
+  @media (min-width: 761px) {
+    .hero {
+      height: 350px;
+    }
+    .hero-photo {
+      height: 100%;
+      object-position: right top;
+    }
+    .hero-copy {
+      padding: 25px;
+      width: 55%;
+    }
+    .hero h1 {
+      font-size: 35px;
+    }
+    .hero-description {
+      font-size: 12px;
+    }
+    .hero-caption {
+      display: none;
+    }
   }
   .detail-image > img {
     max-height: none;

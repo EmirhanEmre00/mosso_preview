@@ -412,6 +412,36 @@
     font-size: 23px;
     margin-bottom: 20px;
   }
+  .checkout-page.checkout-complete {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100svh - var(--checkout-complete-top, 154px));
+    padding-block: 32px;
+  }
+  .checkout-complete > svg {
+    flex-shrink: 0;
+    margin-bottom: 16px;
+  }
+  .checkout-complete > .eyebrow {
+    display: block;
+    font-size: 10px;
+    margin: 0 0 12px;
+  }
+  .checkout-complete > h1 {
+    font-size: clamp(28px, 7vw, 36px);
+    line-height: 1.15;
+    margin: 0 0 14px;
+  }
+  .checkout-complete > p:not(.eyebrow) {
+    font-size: 12px;
+    margin: 0;
+  }
+  .checkout-complete .primary {
+    flex-shrink: 0;
+    margin-top: 24px;
+  }
   .checkout-page .checkout-layout {
     gap: 0;
   }

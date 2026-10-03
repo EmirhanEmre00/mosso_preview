@@ -157,6 +157,15 @@ for (const width of [390, 1440]) {
     await expect(page.getByRole('contentinfo')).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'Ana menü', exact: true })).toHaveCount(1);
     await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+    if (width <= 760) {
+      const section = (await page.locator('.checkout-complete').boundingBox())!;
+      const icon = (await page.locator('.checkout-complete > svg').boundingBox())!;
+      const button = (await page.getByRole('button', { name: 'Siparişlerime git' }).boundingBox())!;
+      expect(section.y + section.height).toBeCloseTo(700, 0);
+      const topSpace = icon.y - section.y;
+      const bottomSpace = section.y + section.height - button.y - button.height;
+      expect(Math.abs(topSpace - bottomSpace)).toBeLessThan(4);
+    }
   });
 }
 
@@ -181,6 +190,9 @@ test('mobile payment dock stays reachable with visible products and no checkout 
   await expect(page.getByText(/Önizleme|Deneme alışverişi/)).toHaveCount(0);
   await page.getByRole('button', { name: 'Sepeti onayla', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Teslimat ve ödeme', exact: true })).toBeVisible();
+  for (const field of ['Adres başlığı', 'Ad soyad', 'Telefon', 'Açık adres']) {
+    await expect(page.getByLabel(field, { exact: true })).toHaveCSS('font-size', '16px');
+  }
   await expect(page.locator('.checkout-delivery-products')).toBeVisible();
   await expect(page.locator('.checkout-delivery-products')).not.toHaveAttribute('open');
   await expect(page.locator('.checkout-delivery-products ul')).toBeHidden();

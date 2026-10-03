@@ -859,6 +859,7 @@
   }
   .order-total-panel {
     padding: 20px 16px;
+    border-top: 0;
   }
   .order-total-panel .checkout-totals p > :last-child {
     flex-shrink: 0;
