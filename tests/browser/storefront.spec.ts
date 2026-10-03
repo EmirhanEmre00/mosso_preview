@@ -6,6 +6,7 @@ for (const width of [320, 360, 390, 430, 768, 1024, 1440, 1920]) {
     await page.goto('/');
     const logo = page.getByRole('link', { name: 'mos’so ana sayfa' }).locator('.brand-wordmark');
     await expect(logo).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
     const layout = await logo.evaluate((img) => {
       const rect = img.getBoundingClientRect();
       const parent = img.parentElement!.getBoundingClientRect();
@@ -27,6 +28,20 @@ for (const width of [320, 360, 390, 430, 768, 1024, 1440, 1920]) {
       viewport: true,
       overflow: false,
     });
+    const tagline = page.getByRole('link', { name: 'mos’so ana sayfa' }).locator('.brand-tagline');
+    await expect(tagline).toBeVisible();
+    expect(
+      await tagline.evaluate((el) => {
+        const rect = el.getBoundingClientRect();
+        const parent = el.parentElement!.getBoundingClientRect();
+        return (
+          rect.left >= parent.left &&
+          rect.right <= parent.right &&
+          rect.top >= parent.top &&
+          rect.bottom <= parent.bottom
+        );
+      }),
+    ).toBe(true);
   });
 }
 

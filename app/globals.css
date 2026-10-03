@@ -2986,6 +2986,11 @@ summary::-webkit-details-marker {
   line-height: 1;
   white-space: nowrap;
 }
+.header-main .brand {
+  height: auto;
+  min-height: 68px;
+  padding-block: 1px;
+}
 .account-shell {
   padding: 28px;
 }
@@ -4698,7 +4703,8 @@ summary::-webkit-details-marker {
   .header-main .brand {
     width: clamp(108px, 31vw, 150px);
     min-width: 98px;
-    height: 60px;
+    height: auto;
+    min-height: 60px;
     gap: 4px;
   }
   .brand .brand-wordmark {
