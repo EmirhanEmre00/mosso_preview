@@ -15,9 +15,6 @@
 .mobile-checkout-total {
   display: none;
 }
-.checkout-page.checkout-complete {
-  min-height: 100svh;
-}
 .checkout-cart-section .order-product-image {
   display: contents;
 }
@@ -244,42 +241,99 @@
     display: flex;
     flex-direction: column;
     flex: 1;
-    padding: 16px 12px;
+    padding: 18px 12px 4px;
     background: #faf8fb;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .mobile-checkout-recommendations > header {
+    margin-bottom: 14px;
+    text-align: center;
   }
   .mobile-checkout-recommendations h2 {
     font-size: 15px;
-    margin: 0 0 16px;
-    text-align: center;
+    margin: 0;
   }
-  .mobile-checkout-recommendations > div {
+  .mobile-checkout-recommendations > header p {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin: 5px 0 0;
+    color: var(--muted);
+    font-size: 10px;
+  }
+  .checkout-recommendation-track {
     display: grid;
     flex: 1;
+    min-width: 0;
     grid-auto-flow: column;
-    grid-auto-columns: calc((100% - 12px) / 2);
+    grid-auto-columns: calc((100% - 24px) / 2.3);
     gap: 12px;
     overflow-x: auto;
-    padding-bottom: 8px;
+    scrollbar-width: none;
     scroll-snap-type: x proximity;
   }
-  .mobile-checkout-recommendations a {
+  .checkout-recommendation-track::-webkit-scrollbar {
+    display: none;
+  }
+  .checkout-recommendation-track > a {
     display: grid;
-    grid-template-rows: minmax(0, 1fr) auto auto;
-    gap: 6px;
-    font-size: 11px;
+    grid-template-rows: minmax(0, 1fr) auto;
     scroll-snap-align: start;
   }
-  .mobile-checkout-recommendations img {
+  .checkout-recommendation-track > a:focus-visible {
+    outline-offset: -2px;
+  }
+  .checkout-recommendation-image {
+    min-height: 0;
+    aspect-ratio: 3/4;
+  }
+  .checkout-recommendation-image img {
     display: block;
     width: 100%;
     height: 100%;
     min-height: 0;
-    aspect-ratio: 3/4;
     object-fit: cover;
   }
-  .mobile-checkout-recommendations strong {
+  .checkout-recommendation-info {
+    display: grid;
+    gap: 5px;
+    padding-top: 7px;
+    align-content: start;
+  }
+  .checkout-recommendation-info > span {
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.45;
+    min-height: 2.9em;
+  }
+  .checkout-recommendation-info strong {
     color: var(--purple);
     font-size: 12px;
+  }
+  .checkout-recommendation-pages {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .checkout-recommendation-pages button {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    min-height: 40px;
+    padding: 0;
+  }
+  .checkout-recommendation-pages button > span {
+    width: 100%;
+    height: 3px;
+    border-radius: 3px;
+    background: #e8e1eb;
+  }
+  .checkout-recommendation-pages button[aria-pressed='true'] > span {
+    background: var(--purple);
   }
   .checkout-delivery-products {
     padding: 0;
@@ -682,7 +736,7 @@
     gap: 12px;
   }
   .checkout-dock-heading > span,
-  .checkout-dock-heading > button {
+  .checkout-dock-security summary {
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -691,10 +745,39 @@
   .checkout-dock-heading > span {
     color: var(--muted);
   }
-  .checkout-dock-heading > button {
+  .checkout-page .checkout-dock-security summary {
     min-height: 28px;
+    padding: 0;
+    border: 0;
     color: var(--purple);
     font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+  .checkout-dock-security {
+    position: relative;
+  }
+  .checkout-dock-security summary::-webkit-details-marker {
+    display: none;
+  }
+  .checkout-dock-security[open] summary > svg:last-child {
+    transform: rotate(180deg);
+  }
+  .checkout-dock-security > p {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 8px);
+    z-index: 1;
+    width: min(270px, calc(100vw - 28px));
+    margin: 0;
+    padding: 12px;
+    background: white;
+    border: 1px solid var(--line);
+    border-top: 2px solid var(--purple);
+    box-shadow: 0 4px 20px #3c204714;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.6;
   }
   .checkout-submit-panel .checkout-consent {
     font-size: 10px;

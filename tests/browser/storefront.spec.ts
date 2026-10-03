@@ -42,6 +42,18 @@ for (const width of [320, 360, 390, 430, 768, 1024, 1440, 1920]) {
         );
       }),
     ).toBe(true);
+    if (width <= 760) {
+      const sloganLayout = await tagline.evaluate((el) => {
+        const rect = el.getBoundingClientRect();
+        const wordmark = el.previousElementSibling!.getBoundingClientRect();
+        return {
+          singleLine: rect.height <= parseFloat(getComputedStyle(el).lineHeight) + 1,
+          belowLogo: rect.top >= wordmark.bottom,
+          textFits: el.scrollWidth <= el.clientWidth,
+        };
+      });
+      expect(sloganLayout).toEqual({ singleLine: true, belowLogo: true, textFits: true });
+    }
   });
 }
 

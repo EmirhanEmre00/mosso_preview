@@ -17,6 +17,7 @@ import { products, money } from '@/lib/products';
 import { previewTotals } from '@/lib/checkout-pricing.mjs';
 import { addressText, type OrderRow, type CheckoutSelection } from '@/lib/demo-orders';
 import OrderProducts from './order-products';
+import CheckoutRecommendations from './checkout-recommendations';
 import PaymentMethods from './payment-methods';
 import type { Address } from './account-panel';
 import PhoneInput from './phone-input';
@@ -34,6 +35,7 @@ export default function CheckoutPage({
   addresses,
   setAddresses,
   onCartChange,
+  onCompletionChange,
 }: {
   cart: OrderRow[];
   signedIn: boolean;
@@ -44,6 +46,7 @@ export default function CheckoutPage({
   addresses: Address[];
   setAddresses: (addresses: Address[]) => void;
   onCartChange: (cart: OrderRow[]) => void;
+  onCompletionChange: (completed: boolean) => void;
 }) {
   const [delivery, setDelivery] = useState({
     name: addresses[0]?.name ?? '',
@@ -70,6 +73,9 @@ export default function CheckoutPage({
   const billingAddress = addresses.find((address) => address.id === billingId);
   const [error, setError] = useState('');
   const [completed, setCompleted] = useState('');
+  useEffect(() => {
+    onCompletionChange(Boolean(completed));
+  }, [completed, onCompletionChange]);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [mobileStep, setMobileStep] = useState<'cart' | 'payment'>('cart');
   const goToMobileStep = (step: 'cart' | 'payment') => {
@@ -78,7 +84,6 @@ export default function CheckoutPage({
     setError('');
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
-  const cartCouponField = useRef<HTMLInputElement>(null);
   const mobileSummaryToggle = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!summaryOpen) return;
@@ -109,12 +114,11 @@ export default function CheckoutPage({
       document.documentElement.style.removeProperty('--checkout-dock-height');
     };
   }, [signedIn, completed, cart.length]);
-  const completionSection = useRef<HTMLElement>(null);
   const completionHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     if (!completed) return;
     const frame = requestAnimationFrame(() => {
-      completionSection.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
+      window.scrollTo({ top: 0, behavior: 'instant' });
       completionHeading.current?.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
@@ -139,7 +143,7 @@ export default function CheckoutPage({
   };
   if (completed)
     return (
-      <section ref={completionSection} className="wrap checkout-page checkout-complete">
+      <section className="wrap checkout-page checkout-complete">
         <Check size={42} />
         <p className="eyebrow">TEŞEKKÜR EDERİZ</p>
         <h1 ref={completionHeading} tabIndex={-1}>
@@ -178,7 +182,7 @@ export default function CheckoutPage({
         </button>
         <h2>
           {mobileStep === 'cart'
-            ? `Sepet özeti (${cart.reduce((n, r) => n + r.quantity, 0)})`
+            ? `Sepet Özeti (${cart.reduce((n, r) => n + r.quantity, 0)})`
             : 'Teslimat ve ödeme'}
         </h2>
         <span className="mobile-checkout-brand">mos’so</span>
@@ -270,7 +274,6 @@ export default function CheckoutPage({
                   <div className="checkout-coupon-input">
                     <input
                       id="mobile-cart-coupon-code"
-                      ref={cartCouponField}
                       value={couponInput}
                       maxLength={30}
                       placeholder="Kupon kodunu gir"
@@ -314,24 +317,11 @@ export default function CheckoutPage({
                   )}
                 </div>
               </div>
-              <div className="mobile-checkout-recommendations">
-                <h2>Bunları da sevebilirsin.</h2>
-                <div>
-                  {products
-                    .filter((product) => !cart.some((row) => row.id === product.id))
-                    .slice(0, 4)
-                    .map((product) => (
-                      <a
-                        key={product.id}
-                        href={sitePath(`/?urun=${encodeURIComponent(product.id)}`)}
-                      >
-                        <img src={sitePath(product.image)} alt={product.name} loading="lazy" />
-                        <span>{product.name}</span>
-                        <strong>{money(product.price)}</strong>
-                      </a>
-                    ))}
-                </div>
-              </div>
+              <CheckoutRecommendations
+                items={products
+                  .filter((product) => !cart.some((row) => row.id === product.id))
+                  .slice(0, 6)}
+              />
             </section>
             <details className="checkout-delivery-products" aria-label="Sepetindeki ürünler">
               <summary>
@@ -777,22 +767,16 @@ export default function CheckoutPage({
                   <span>
                     <LockKeyhole size={12} aria-hidden="true" /> Siparişini tamamla
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      goToMobileStep('cart');
-                      requestAnimationFrame(() => {
-                        cartCouponField.current?.scrollIntoView({
-                          block: 'center',
-                          behavior: 'smooth',
-                        });
-                        cartCouponField.current?.focus({ preventScroll: true });
-                      });
-                    }}
-                  >
-                    <TicketPercent size={14} aria-hidden="true" />{' '}
-                    {coupon ? 'Kuponu düzenle' : 'Kupon ekle'}
-                  </button>
+                  <details className="checkout-dock-security">
+                    <summary>
+                      <ShieldCheck size={14} aria-hidden="true" /> Güvenli ödeme{' '}
+                      <ChevronDown size={12} aria-hidden="true" />
+                    </summary>
+                    <p>
+                      Kart bilgilerin kaydedilmez. Ödeme öncesinde adresini, seçtiğin ürünleri ve
+                      toplam tutarı kontrol edebilirsin.
+                    </p>
+                  </details>
                 </div>
                 <div className="checkout-consent">
                   <input

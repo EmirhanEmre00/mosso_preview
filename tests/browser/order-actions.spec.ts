@@ -117,7 +117,8 @@ for (const width of [390, 1440]) {
     const heading = page.getByRole('heading', { name: 'Siparişiniz alındı.', exact: true });
     await expect(heading).toBeFocused();
     await expect(heading).toBeInViewport();
-    expect((await heading.boundingBox())!.y).toBeLessThan(350);
+    await expect(page.getByRole('contentinfo')).toBeVisible();
+    await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
   });
 }
 
@@ -224,9 +225,13 @@ test('mobile summary expands pricing and applies coupons without changing the de
     await page.getByRole('button', { name: 'Sipariş özetini gizle', exact: true }).press('Escape');
     await expect(breakdown).toBeHidden();
   }
-  await page.getByRole('button', { name: 'Kuponu düzenle', exact: true }).click();
-  await expect(page.getByLabel('Kupon kodu', { exact: true })).toBeFocused();
-  await expect(page.getByRole('heading', { name: 'Sepet özeti (1)', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Kupon ekle|Kuponu düzenle/ })).toHaveCount(0);
+  await page.locator('.checkout-dock-security summary').click();
+  await expect(page.locator('.checkout-dock-security > p')).toBeVisible();
+  await page.locator('.checkout-dock-security summary').click();
+  await expect(page.locator('.checkout-dock-security > p')).toBeHidden();
+  await page.getByRole('button', { name: 'Sepet özetine dön', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Sepet Özeti (1)', exact: true })).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect(toggle).toBeHidden();
   await expect(breakdown).toBeVisible();
@@ -246,7 +251,7 @@ test('mobile checkout moves between cart and delivery while preserving edits and
     );
   });
   await page.goto('/odeme/');
-  await expect(page.getByRole('heading', { name: 'Sepet özeti (1)', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sepet Özeti (1)', exact: true })).toBeVisible();
   await expect(page.locator('#checkout-products-list')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Ödeme yap', exact: true })).toBeHidden();
   await page
@@ -264,7 +269,7 @@ test('mobile checkout moves between cart and delivery while preserving edits and
   await expect(page.locator('.mobile-checkout-total strong')).toHaveText(total);
   await expect(page.getByRole('button', { name: 'Ödeme yap', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Sepet özetine dön', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Sepet özeti (2)', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sepet Özeti (2)', exact: true })).toBeVisible();
   await expect(page.locator('.mobile-cart-coupon')).toContainText(
     'MOSSO10 · %10 indirim uygulandı',
   );
@@ -293,4 +298,46 @@ test('mobile checkout moves between cart and delivery while preserving edits and
   await expect(
     page.getByRole('heading', { name: 'Rahat Kesim Uzun Tunik', exact: true }),
   ).toBeVisible();
+});
+
+test('mobile recommendations expose the next product and update navigation when scrolled', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    sessionStorage.setItem('mosso-demo-session', 'preview');
+    localStorage.setItem(
+      'mosso-preview-v1',
+      JSON.stringify({ cart: [{ id: 'basic-crop', size: 'M', color: 'Ekru', quantity: 1 }] }),
+    );
+  });
+  await page.goto('/odeme/');
+  const suggestions = page.getByRole('region', { name: 'Ürün önerileri', exact: true });
+  const track = suggestions.locator('.checkout-recommendation-track');
+  const cards = track.getByRole('link');
+  const firstPage = suggestions.getByRole('button', { name: 'Önerilerin 1. sayfası' });
+  const lastPage = suggestions.getByRole('button', { name: 'Önerilerin 3. sayfası' });
+  await expect(cards).toHaveCount(6);
+  await expect(suggestions).toContainText('Yana kaydır');
+  for (const width of [320, 390, 760]) {
+    await page.setViewportSize({ width, height: 844 });
+    await firstPage.click();
+    await expect(firstPage).toHaveAttribute('aria-pressed', 'true');
+    await expect.poll(() => track.evaluate((el) => el.scrollLeft)).toBe(0);
+    const bounds = (await track.boundingBox())!;
+    const nextCard = (await cards.nth(2).boundingBox())!;
+    expect(nextCard.x).toBeLessThan(bounds.x + bounds.width);
+    expect(nextCard.x + nextCard.width).toBeGreaterThan(bounds.x + bounds.width);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await track.evaluate((el) => el.scrollTo({ left: el.scrollWidth, behavior: 'instant' }));
+    await expect(lastPage).toHaveAttribute('aria-pressed', 'true');
+  }
+  const lastProductName = (await cards.last().getAttribute('aria-label'))!.replace(
+    ' ürününü incele',
+    '',
+  );
+  await cards.last().click();
+  await expect(page.getByRole('heading', { name: lastProductName, exact: true })).toBeVisible();
 });

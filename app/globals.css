@@ -4701,20 +4701,20 @@ summary::-webkit-details-marker {
     min-width: 30px;
   }
   .header-main .brand {
-    width: clamp(108px, 31vw, 150px);
-    min-width: 98px;
+    width: clamp(138px, 36vw, 166px);
+    min-width: 138px;
     height: auto;
     min-height: 60px;
     gap: 4px;
   }
-  .brand .brand-wordmark {
-    font-size: 34px;
+  .header-main .brand .brand-wordmark {
+    font-size: 42px;
   }
-  .brand .brand-tagline {
+  .header-main .brand .brand-tagline {
     font-size: 8.5px;
     line-height: 1.35;
-    text-wrap: balance;
-    max-width: 142px;
+    white-space: nowrap;
+    max-width: 100%;
     letter-spacing: 0;
   }
   .header-main .header-actions {
@@ -5009,19 +5009,19 @@ summary::-webkit-details-marker {
     gap: 3px;
   }
   .header-main .brand {
-    width: 104px;
-    min-width: 92px;
+    width: 130px;
+    min-width: 130px;
   }
   .header-main .mobile-menu {
     width: 26px;
     min-width: 26px;
   }
-  .brand .brand-wordmark {
-    font-size: 30px;
+  .header-main .brand .brand-wordmark {
+    font-size: 40px;
   }
-  .brand .brand-tagline {
+  .header-main .brand .brand-tagline {
     font-size: 8px;
-    max-width: 104px;
+    max-width: 100%;
   }
   .header-actions .icon-button {
     width: 32px;

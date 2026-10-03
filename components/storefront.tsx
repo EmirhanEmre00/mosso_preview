@@ -69,6 +69,10 @@ export default function Storefront({
   const [view, setView] = useState<View>(
     initialCheckout ? 'checkout' : initialAccount ? 'account' : 'home',
   );
+  const [checkoutFinished, setCheckoutFinished] = useState(false);
+  useEffect(() => {
+    if (view !== 'checkout') setCheckoutFinished(false);
+  }, [view]);
   const [category, setCategory] = useState('Tümü');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('featured');
@@ -250,6 +254,7 @@ export default function Storefront({
     navigateAccount('Giriş yap / Kayıt ol', false);
   };
   const startCheckout = () => {
+    setCheckoutFinished(false);
     setCartOpen(false);
     setMenuOpen(false);
     setSearchOpen(false);
@@ -561,6 +566,7 @@ export default function Storefront({
       <main id="main">
         {view === 'checkout' && (
           <CheckoutPage
+            onCompletionChange={setCheckoutFinished}
             onCartChange={(rows) => setCart(validateCart(rows, products))}
             addresses={addresses}
             setAddresses={setAddresses}
@@ -1004,7 +1010,7 @@ export default function Storefront({
           </section>
         )}
       </main>
-      {view !== 'checkout' && (
+      {(view !== 'checkout' || checkoutFinished) && (
         <StoreFooter
           category={(cat) => navigate('collection', cat)}
           home={() => navigate('home')}
