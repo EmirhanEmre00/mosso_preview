@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
   Check,
@@ -21,6 +21,7 @@ import type { Address } from './account-panel';
 import PhoneInput from './phone-input';
 import LocationFields from './location-fields';
 import { validAddress } from '@/lib/contact-validation.mjs';
+import './checkout-mobile.css';
 export default function CheckoutPage({
   cart,
   signedIn,
@@ -68,6 +69,35 @@ export default function CheckoutPage({
   const [scenario, setScenario] = useState('success');
   const [error, setError] = useState('');
   const [completed, setCompleted] = useState('');
+  const [productsOpen, setProductsOpen] = useState(false);
+  const submitPanel = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const panel = submitPanel.current;
+    if (!panel) return;
+    const updateHeight = () => {
+      document.documentElement.style.setProperty(
+        '--checkout-dock-height',
+        `${panel.getBoundingClientRect().height}px`,
+      );
+    };
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(panel);
+    updateHeight();
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty('--checkout-dock-height');
+    };
+  }, [signedIn, completed, cart.length]);
+  const completionSection = useRef<HTMLElement>(null);
+  const completionHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (!completed) return;
+    const frame = requestAnimationFrame(() => {
+      completionSection.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
+      completionHeading.current?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [completed]);
   const [paymentMethod, setPaymentMethod] = useState('Kredi Kartı');
   const [couponInput, setCouponInput] = useState('');
   const [coupon, setCoupon] = useState('');
@@ -88,10 +118,12 @@ export default function CheckoutPage({
   };
   if (completed)
     return (
-      <section className="wrap checkout-page checkout-complete">
+      <section ref={completionSection} className="wrap checkout-page checkout-complete">
         <Check size={42} />
         <p className="eyebrow">ÖNİZLEME TAMAMLANDI</p>
-        <h1>Seçimlerin hazır.</h1>
+        <h1 ref={completionHeading} tabIndex={-1}>
+          Siparişiniz alındı.
+        </h1>
         <p>
           Deneme siparişin: <strong>{completed}</strong>
         </p>
@@ -190,10 +222,27 @@ export default function CheckoutPage({
         >
           <div className="checkout-main">
             <section className="checkout-section" aria-labelledby="checkout-products-title">
-              <h2 id="checkout-products-title">
-                Sepetindeki ürünler <small>({cart.reduce((n, r) => n + r.quantity, 0)} ürün)</small>
-              </h2>
-              <OrderProducts rows={cart} onChange={onCartChange} />
+              <div className="checkout-products-heading">
+                <h2 id="checkout-products-title">
+                  Sepetindeki ürünler{' '}
+                  <small>({cart.reduce((n, r) => n + r.quantity, 0)} ürün)</small>
+                </h2>
+                <button
+                  type="button"
+                  className="checkout-products-toggle"
+                  aria-label={
+                    productsOpen ? 'Sepetteki ürünleri gizle' : 'Sepetteki ürünleri göster'
+                  }
+                  aria-expanded={productsOpen}
+                  aria-controls="checkout-products-list"
+                  onClick={() => setProductsOpen((open) => !open)}
+                >
+                  <ChevronDown size={18} />
+                </button>
+              </div>
+              <div id="checkout-products-list" data-expanded={productsOpen}>
+                <OrderProducts rows={cart} onChange={onCartChange} />
+              </div>
             </section>
             <section className="checkout-section" aria-labelledby="delivery-title">
               <div className="checkout-section-title">
@@ -621,36 +670,45 @@ export default function CheckoutPage({
               <strong>{paymentMethod}</strong>
             </div>
             <div className="checkout-summary-actions">
-              <div className="checkout-consent">
-                <input
-                  id="checkout-agreement"
-                  type="checkbox"
-                  required
-                  aria-labelledby="checkout-agreement-text"
-                  aria-describedby="checkout-agreement-preview"
-                />
-                <div id="checkout-agreement-text">
-                  <a href="#pre-info">
-                    <strong>Ön bilgilendirme formu</strong>
-                  </a>{' '}
-                  ve{' '}
-                  <a href="#distance-contract">
-                    <strong>mesafeli satış sözleşmesi</strong>
-                  </a>
-                  <label htmlFor="checkout-agreement">’ni okudum, onaylıyorum.</label>
+              <div ref={submitPanel} className="checkout-submit-panel">
+                <div className="checkout-consent">
+                  <input
+                    id="checkout-agreement"
+                    type="checkbox"
+                    required
+                    aria-labelledby="checkout-agreement-text"
+                    aria-describedby="checkout-agreement-preview"
+                  />
+                  <div id="checkout-agreement-text">
+                    <a href="#pre-info">
+                      <strong>Ön bilgilendirme formu</strong>
+                    </a>{' '}
+                    ve{' '}
+                    <a href="#distance-contract">
+                      <strong>mesafeli satış sözleşmesi</strong>
+                    </a>
+                    <label htmlFor="checkout-agreement">’ni okudum, onaylıyorum.</label>
+                  </div>
+                </div>
+                <p id="checkout-agreement-preview" className="checkout-note">
+                  Önizleme · Belgeler taslaktır, gerçek tahsilat 0 TL.
+                </p>
+                {error && (
+                  <p role="alert" className="checkout-error">
+                    {error}
+                  </p>
+                )}
+                <div className="checkout-submit-row">
+                  <div className="mobile-checkout-total">
+                    <span>Ödenecek tutar</span>
+                    <strong>{money(totals.total)}</strong>
+                    <small>KDV dahil</small>
+                  </div>
+                  <button className="primary" type="submit">
+                    Ödeme yap <LockKeyhole size={18} />
+                  </button>
                 </div>
               </div>
-              <p id="checkout-agreement-preview" className="checkout-note">
-                Önizleme · Belgeler taslaktır, gerçek tahsilat 0 TL.
-              </p>
-              {error && (
-                <p role="alert" className="checkout-error">
-                  {error}
-                </p>
-              )}
-              <button className="primary" type="submit">
-                Ödeme yap <LockKeyhole size={18} />
-              </button>
               <details className="checkout-security">
                 <summary>
                   <ShieldCheck size={19} aria-hidden="true" />

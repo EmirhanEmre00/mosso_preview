@@ -15,7 +15,10 @@ export default function OrderItemSelection({
   return (
     <fieldset className="order-item-selection">
       <legend>İşlem yapmak istediğin ürünleri seç</legend>
-      <p>Yalnızca seçtiğin ürünler ve adetler işleme alınır.</p>
+      <p>
+        Seçtiğin ürünün kalan tüm adetleri işleme alınır. İstersen adedi azaltabilirsin. İptal
+        edilen veya iade talebine alınan adetler tekrar seçilemez.
+      </p>
       {rows.map((row) => {
         const product = products.find((product) => product.id === row.id);
         if (!product) return null;
@@ -32,7 +35,7 @@ export default function OrderItemSelection({
                 onChange={(event) =>
                   onChange(
                     event.target.checked
-                      ? [...selected, { ...row, quantity: 1 }]
+                      ? [...selected, { ...row }]
                       : selected.filter((item) => cartRowKey(item) !== key),
                   )
                 }
