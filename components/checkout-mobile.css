@@ -25,6 +25,10 @@
 }
 
 @media (max-width: 760px) {
+  html:has(.checkout-complete) {
+    scroll-behavior: auto;
+    overflow-anchor: none;
+  }
   body:has(.checkout-page:not(.checkout-complete)) .announcement,
   body:has(.checkout-page:not(.checkout-complete)) .header {
     display: none;

@@ -124,7 +124,7 @@ test('partial cancellation leaves only the unprocessed quantity for a return', a
   await expect(form.getByRole('checkbox', { name: cropLabel, exact: true })).toBeEnabled();
 });
 
-for (const width of [390, 1440]) {
+for (const width of [320, 390, 430, 1440]) {
   test(`checkout confirmation scrolls into view and receives focus at ${width}px`, async ({
     page,
   }) => {
@@ -165,6 +165,19 @@ for (const width of [390, 1440]) {
       const topSpace = icon.y - section.y;
       const bottomSpace = section.y + section.height - button.y - button.height;
       expect(Math.abs(topSpace - bottomSpace)).toBeLessThan(4);
+      // Mobile keyboards can finish closing after the confirmation has rendered.
+      await page.evaluate(() => {
+        window.scrollTo({ top: 180, behavior: 'instant' });
+        window.visualViewport?.dispatchEvent(new Event('resize'));
+      });
+      await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+      await expect(heading).toBeFocused();
+      // Once the customer scrolls deliberately, layout updates must not pull them back.
+      await page.mouse.wheel(0, 180);
+      await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(0);
+      const customerScroll = await page.evaluate(() => scrollY);
+      await page.evaluate(() => window.visualViewport?.dispatchEvent(new Event('resize')));
+      await expect.poll(() => page.evaluate(() => scrollY)).toBe(customerScroll);
     }
   });
 }

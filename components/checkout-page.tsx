@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
   ArrowLeft,
@@ -73,7 +73,7 @@ export default function CheckoutPage({
   const billingAddress = addresses.find((address) => address.id === billingId);
   const [error, setError] = useState('');
   const [completed, setCompleted] = useState('');
-  useEffect(() => {
+  useLayoutEffect(() => {
     onCompletionChange(Boolean(completed));
   }, [completed, onCompletionChange]);
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -116,8 +116,10 @@ export default function CheckoutPage({
   }, [signedIn, completed, cart.length]);
   const completionHeading = useRef<HTMLHeadingElement>(null);
   const completionSection = useRef<HTMLElement>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!completed) return;
+    let restoringScroll = true;
+    let frame = 0;
     const updateTop = () => {
       const section = completionSection.current;
       if (section)
@@ -126,19 +128,45 @@ export default function CheckoutPage({
           `${section.getBoundingClientRect().top + window.scrollY}px`,
         );
     };
-    const header = document.querySelector('.header');
-    const observer = new ResizeObserver(updateTop);
-    if (header) observer.observe(header);
-    window.addEventListener('resize', updateTop);
-    const frame = requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, behavior: 'instant' });
+    const alignCompletion = () => {
       updateTop();
-      completionHeading.current?.focus({ preventScroll: true });
-    });
+      if (restoringScroll) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    };
+    const scheduleAlignment = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(alignCompletion);
+    };
+    const stopRestoring = () => {
+      restoringScroll = false;
+      window.removeEventListener('pointerdown', stopRestoring);
+      window.removeEventListener('touchstart', stopRestoring);
+      window.removeEventListener('wheel', stopRestoring);
+      window.removeEventListener('keydown', stopRestoring);
+    };
+    // Allow the keyboard and restored header to settle without overriding customer scrolling.
+    const timeout = window.setTimeout(stopRestoring, 2000);
+    window.addEventListener('pointerdown', stopRestoring, { passive: true });
+    window.addEventListener('touchstart', stopRestoring, { passive: true });
+    window.addEventListener('wheel', stopRestoring, { passive: true });
+    window.addEventListener('keydown', stopRestoring);
+    const viewport = window.visualViewport;
+    viewport?.addEventListener('resize', scheduleAlignment);
+    viewport?.addEventListener('scroll', scheduleAlignment);
+    const header = document.querySelector('.header');
+    const observer = new ResizeObserver(scheduleAlignment);
+    if (header) observer.observe(header);
+    window.addEventListener('resize', scheduleAlignment);
+    completionHeading.current?.focus({ preventScroll: true });
+    alignCompletion();
+    scheduleAlignment();
     return () => {
       cancelAnimationFrame(frame);
+      window.clearTimeout(timeout);
+      stopRestoring();
       observer.disconnect();
-      window.removeEventListener('resize', updateTop);
+      window.removeEventListener('resize', scheduleAlignment);
+      viewport?.removeEventListener('resize', scheduleAlignment);
+      viewport?.removeEventListener('scroll', scheduleAlignment);
     };
   }, [completed]);
   const [paymentMethod, setPaymentMethod] = useState('Kredi Kartı');
@@ -251,6 +279,7 @@ export default function CheckoutPage({
                 : addressText(billingAddress!),
             });
             if (id) {
+              if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
               setCompleted(id);
               setDelivery({
                 name: '',
