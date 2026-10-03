@@ -106,7 +106,7 @@ export default function Learning() {
       <Link href="/" className="text-link">
         ← Mağazaya dön
       </Link>
-      <p className="eyebrow">MOSSO / BİRLİKTE GELİŞTİRİYORUZ</p>
+      <p className="eyebrow">MOS’SO / BİRLİKTE GELİŞTİRİYORUZ</p>
       <h1>
         Bir mağazanın
         <br />

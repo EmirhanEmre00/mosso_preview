@@ -1,0 +1,228 @@
+.support-launcher {
+  position: fixed;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  right: max(24px, env(safe-area-inset-right));
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 46px;
+  padding: 12px 18px;
+  border: 1px solid var(--purple);
+  border-radius: 4px;
+  background: var(--purple);
+  color: white;
+  box-shadow: 0 6px 20px #4d18542b;
+  font-size: 14px;
+  font-weight: 600;
+}
+.support-launcher:hover {
+  background: #652372;
+}
+.support-launcher:focus-visible,
+.support-panel :focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 3px;
+}
+.support-panel {
+  position: fixed;
+  inset: auto 24px 80px auto;
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100dvh - 110px);
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--purple);
+  border-radius: 4px;
+  background: white;
+  color: var(--ink);
+  box-shadow: 0 14px 54px #33203926;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.support-panel::backdrop {
+  background: #281a302b;
+}
+.support-inner {
+  padding: 24px;
+}
+.support-inner header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.support-inner header > button {
+  flex: 0 0 auto;
+  min-width: 32px;
+  min-height: 32px;
+  display: grid;
+  place-items: center;
+}
+.support-inner .eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+.support-inner h2 {
+  font-size: 22px;
+  line-height: 1.25;
+  margin: 8px 0 0;
+}
+.support-intro {
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 12px 0 18px;
+  color: var(--muted);
+}
+.support-unavailable {
+  background: #f5eff7;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.support-panel fieldset {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  min-width: 0;
+}
+.support-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 12px;
+}
+.support-fields label {
+  display: grid;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 0;
+}
+.support-fields small {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.support-fields input,
+.support-fields select,
+.support-fields textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: white;
+  padding: 10px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+}
+.support-fields textarea {
+  resize: vertical;
+  min-height: 100px;
+  max-height: 260px;
+}
+.support-wide {
+  grid-column: 1 / -1;
+}
+.support-fields .support-honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.support-privacy {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 14px 0;
+}
+.support-submit {
+  width: 100%;
+  min-height: 44px;
+  font-size: 13px;
+}
+.support-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.support-whatsapp {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: #287348;
+}
+.support-whatsapp:hover {
+  text-decoration: underline;
+}
+.support-error {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #a32f3d;
+  margin-bottom: 12px;
+}
+.support-success {
+  padding: 30px 0 8px;
+  text-align: center;
+}
+.support-success > svg {
+  color: var(--purple);
+  margin: auto;
+}
+.support-success h3 {
+  margin: 16px 0 8px;
+}
+.support-success p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+.support-success .primary {
+  width: 100%;
+}
+@media (max-width: 600px) {
+  .support-launcher {
+    right: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    padding: 12px;
+    width: 48px;
+    height: 48px;
+    min-height: 48px;
+    border-radius: 50%;
+    font-size: 0;
+    gap: 0;
+    justify-content: center;
+  }
+  .support-panel {
+    inset: auto 16px max(72px, calc(env(safe-area-inset-bottom) + 60px)) auto;
+    max-height: calc(100dvh - 96px);
+  }
+  .support-inner {
+    padding: 20px;
+  }
+  .support-fields input,
+  .support-fields select,
+  .support-fields textarea {
+    font-size: 16px;
+  }
+}
+@media (max-width: 380px) {
+  .support-fields {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+@media (max-width: 600px) {
+  .support-inner header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: white;
+    padding-block: 8px;
+  }
+}

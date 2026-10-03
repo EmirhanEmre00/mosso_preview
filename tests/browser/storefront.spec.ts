@@ -4,15 +4,14 @@ for (const width of [320, 360, 390, 430, 768, 1024, 1440, 1920]) {
   test(`logo is fully visible and header has no overflow at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
-    const logo = page.getByRole('link', { name: 'Mosso ana sayfa' }).locator('img');
+    const logo = page.getByRole('link', { name: 'mos’so ana sayfa' }).locator('.brand-wordmark');
     await expect(logo).toBeVisible();
     const layout = await logo.evaluate((img) => {
-      const image = img as HTMLImageElement;
       const rect = img.getBoundingClientRect();
       const parent = img.parentElement!.getBoundingClientRect();
       return {
-        loaded: image.complete && image.naturalWidth > 0,
-        fit: getComputedStyle(img).objectFit,
+        text: img.textContent,
+
         contained:
           rect.left >= parent.left &&
           rect.right <= parent.right &&
@@ -23,8 +22,7 @@ for (const width of [320, 360, 390, 430, 768, 1024, 1440, 1920]) {
       };
     });
     expect(layout).toEqual({
-      loaded: true,
-      fit: 'contain',
+      text: 'mos’so',
       contained: true,
       viewport: true,
       overflow: false,
@@ -32,9 +30,7 @@ for (const width of [320, 360, 390, 430, 768, 1024, 1440, 1920]) {
   });
 }
 
-test('size is required, cart survives reload and preview never creates an order', async ({
-  page,
-}) => {
+test('size is required, cart survives reload and checkout opens as a page', async ({ page }) => {
   await page.goto('/?urun=lila-tunik');
   await page.getByRole('button', { name: 'Sepete ekle', exact: true }).click();
   await expect(page.getByText('Sepete eklemek için bir beden seçmelisin.')).toBeVisible();
@@ -47,8 +43,12 @@ test('size is required, cart survives reload and preview never creates an order'
   await page.reload();
   await page.getByRole('button', { name: 'Sepetim (2)', exact: true }).click();
   await expect(dialog).toContainText('₺1.798');
-  await page.getByRole('button', { name: 'Ödeme adımını önizle' }).click();
-  await expect(dialog).toContainText('Sipariş oluşturulmadı ve ödeme alınmadı.');
+  await page.getByRole('button', { name: 'Ödeme adımlarına geç' }).click();
+  await expect(page).toHaveURL(/\/odeme\/?$/);
+  await expect(
+    page.getByText('Deneme alışverişi · Gerçek ödeme alınmaz.', { exact: false }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Sepetim (2)', exact: true }).click();
   await page.getByRole('button', { name: 'Rahat Kesim Uzun Tunik sepetten kaldır' }).click();
   await expect(dialog).toContainText('Güzel seçimlere yer var.');
 });

@@ -21,28 +21,65 @@ import {
   X,
 } from 'lucide-react';
 import { categories, money, products, type Product } from '@/lib/products';
-import { cartTotal, validateCart } from '@/lib/cart.mjs';
+import { cartTotal, validateCart, cartRowKey } from '@/lib/cart.mjs';
+import { previewTotals, paymentMethods } from '@/lib/checkout-pricing.mjs';
 import { categoryPath, categoryNavigation, navigationCategories } from '@/lib/categories.mjs';
 import { filterCatalog } from '@/lib/catalog.mjs';
 import CatalogFilters, { emptyFilters, type Filters } from './catalog-filters';
 import StoreFooter from './store-footer';
 import ProfileMenu from './profile-menu';
+import SupportWidget, { type SupportContact } from './support-widget';
+import CheckoutPage from './checkout-page';
+import ColorSelector from './color-selector';
+import {
+  readDemoOrders,
+  ORDERS_KEY,
+  snapshotAddress,
+  exampleOrders,
+  type CheckoutSelection,
+  type DemoOrder,
+} from '@/lib/demo-orders';
+import { cancelOrder, requestOrderReturn } from '@/lib/order-lifecycle.mjs';
+import AccountPanel, { type AccountSection, type Address } from './account-panel';
+const accountRoutes: Record<AccountSection, string> = {
+  'Giriş yap / Kayıt ol': '/giris/',
+  Hesabım: '/hesabim/',
+  Siparişlerim: '/siparislerim/',
+  Adreslerim: '/adreslerim/',
+};
+const SESSION_KEY = 'mosso-demo-session';
+const REMEMBER_KEY = 'mosso-demo-remember-until';
 
-type CartRow = { id: string; size: string; quantity: number };
-type View = 'home' | 'collection' | 'favorites' | 'product';
+type CartRow = { id: string; size: string; color?: string; quantity: number };
+type View = 'home' | 'collection' | 'favorites' | 'product' | 'account' | 'checkout';
 const STORE_KEY = 'mosso-preview-v1';
 const hero = '/images/mosso-editorial.webp';
 
-export default function Storefront() {
-  const [view, setView] = useState<View>('home');
+export default function Storefront({
+  initialAccount,
+  initialCheckout = false,
+}: {
+  initialAccount?: AccountSection;
+  initialCheckout?: boolean;
+}) {
+  const [signedIn, setSignedIn] = useState(false);
+  const [accountSection, setAccountSection] = useState<AccountSection>(
+    initialAccount || 'Giriş yap / Kayıt ol',
+  );
+  const [view, setView] = useState<View>(
+    initialCheckout ? 'checkout' : initialAccount ? 'account' : 'home',
+  );
   const [category, setCategory] = useState('Tümü');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState('featured');
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [visibleCount, setVisibleCount] = useState(12);
+  const [relatedCount, setRelatedCount] = useState(12);
+  const relatedEnd = useRef<HTMLDivElement>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [active, setActive] = useState<Product>(products[0]);
   const [size, setSize] = useState('');
+  const [color, setColor] = useState(products[0].colors[0].name);
   const [sizeError, setSizeError] = useState(false);
   const [cart, setCart] = useState<CartRow[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -51,9 +88,30 @@ export default function Storefront() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notice, setNotice] = useState('');
-  const [checkout, setCheckout] = useState(false);
+  const [orders, setOrders] = useState<DemoOrder[]>([]);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [supportContact, setSupportContact] = useState<SupportContact | null>(null);
+  const pendingCheckout = useRef(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (
+      view !== 'product' ||
+      relatedCount >= products.length - 1 ||
+      !relatedEnd.current ||
+      !('IntersectionObserver' in window)
+    )
+      return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting)
+          setRelatedCount((count) => Math.min(count + 8, products.length - 1));
+      },
+      { rootMargin: '300px' },
+    );
+    observer.observe(relatedEnd.current);
+    return () => observer.disconnect();
+  }, [view, active.id, relatedCount]);
 
   useEffect(() => {
     try {
@@ -68,8 +126,37 @@ export default function Storefront() {
     } catch {
       /* Broken or blocked browser storage must not prevent browsing. */
     }
+    setOrders(readDemoOrders());
     setLoaded(true);
     const sync = () => {
+      let authenticated = false;
+      try {
+        authenticated = sessionStorage.getItem(SESSION_KEY) === 'preview';
+        const until = Number(localStorage.getItem(REMEMBER_KEY));
+        if (Number.isFinite(until) && until > Date.now() && until <= Date.now() + 30 * 86400000)
+          authenticated = true;
+        else localStorage.removeItem(REMEMBER_KEY);
+      } catch {}
+      setSignedIn(authenticated);
+      if (location.pathname.replace(/\/$/, '') === sitePath('/odeme')) {
+        setView('checkout');
+        return;
+      }
+      const route = (Object.keys(accountRoutes) as AccountSection[]).find(
+        (key) =>
+          location.pathname.replace(/\/$/, '') === sitePath(accountRoutes[key]).replace(/\/$/, ''),
+      );
+      if (route) {
+        const allowed = authenticated
+          ? route === 'Giriş yap / Kayıt ol'
+            ? 'Hesabım'
+            : route
+          : 'Giriş yap / Kayıt ol';
+        setAccountSection(allowed);
+        setView('account');
+        if (allowed !== route) history.replaceState({}, '', sitePath(accountRoutes[allowed]));
+        return;
+      }
       const params = new URLSearchParams(location.search);
       setQuery(params.get('q') || '');
       setFilters(emptyFilters);
@@ -77,7 +164,9 @@ export default function Storefront() {
       setSizeError(false);
       const item = products.find((p) => p.id === params.get('urun'));
       if (item) {
+        setRelatedCount(12);
         setActive(item);
+        setColor(item.colors[0].name);
         setView('product');
         setSize('');
       } else if (params.has('favoriler')) setView('favorites');
@@ -121,6 +210,81 @@ export default function Storefront() {
     };
   }, [cartOpen]);
 
+  const navigateAccount = (section: AccountSection, authenticated = signedIn) => {
+    const target = authenticated
+      ? section === 'Giriş yap / Kayıt ol'
+        ? 'Hesabım'
+        : section
+      : 'Giriş yap / Kayıt ol';
+    setAccountSection(target);
+    setView('account');
+    setMenuOpen(false);
+    setSearchOpen(false);
+    history.pushState({}, '', sitePath(accountRoutes[target]));
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+  const loginPreview = (remember = false) => {
+    try {
+      sessionStorage.setItem(SESSION_KEY, 'preview');
+    } catch {}
+    try {
+      if (remember) localStorage.setItem(REMEMBER_KEY, String(Date.now() + 30 * 86400000));
+      else localStorage.removeItem(REMEMBER_KEY);
+    } catch {}
+    setSignedIn(true);
+    if (pendingCheckout.current) {
+      pendingCheckout.current = false;
+      startCheckout();
+    } else navigateAccount('Hesabım', true);
+  };
+  const logoutPreview = () => {
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch {}
+    try {
+      localStorage.removeItem(REMEMBER_KEY);
+    } catch {}
+    setSignedIn(false);
+    setSupportContact(null);
+    setAddresses([]);
+    navigateAccount('Giriş yap / Kayıt ol', false);
+  };
+  const startCheckout = () => {
+    setCartOpen(false);
+    setMenuOpen(false);
+    setSearchOpen(false);
+    setView('checkout');
+    history.pushState({}, '', sitePath('/odeme/'));
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+  const saveOrders = (next: DemoOrder[], successNotice?: string) => {
+    setOrders(next);
+    try {
+      sessionStorage.setItem(ORDERS_KEY, JSON.stringify(next));
+      if (successNotice) setNotice(successNotice);
+    } catch {
+      setNotice('Tarayıcı kaydı kapalı; deneme siparişin yalnızca bu sayfa açıkken korunur.');
+    }
+  };
+  const completeOrder = (selection: CheckoutSelection) => {
+    const rows = validateCart(cart, products);
+    if (!rows.length) return '';
+    const order: DemoOrder = {
+      id: 'DEMO-' + crypto.randomUUID().slice(0, 8).toUpperCase(),
+      date: new Date().toISOString(),
+      rows,
+      status: 'received',
+      deliveryAddress: snapshotAddress(selection.deliveryAddress),
+      billingAddress: selection.billingAddress.slice(0, 800),
+      coupon: previewTotals(rows, products, selection.coupon).coupon,
+      paymentMethod: paymentMethods.includes(selection.paymentMethod)
+        ? selection.paymentMethod
+        : 'Kredi Kartı',
+    };
+    saveOrders([order, ...orders].slice(0, 50));
+    setCart([]);
+    return order.id;
+  };
   const navigate = (next: View, cat = 'Tümü', product?: Product) => {
     setView(next);
     setCategory(cat);
@@ -131,8 +295,12 @@ export default function Storefront() {
     setSizeError(false);
     setFilters(emptyFilters);
     setVisibleCount(12);
+    setRelatedCount(12);
     setFiltersOpen(false);
-    if (product) setActive(product);
+    if (product) {
+      setActive(product);
+      setColor(product.colors[0].name);
+    }
     const params = new URLSearchParams();
     if (next === 'collection') params.set('kategori', cat);
     if (next === 'product' && product) params.set('urun', product.id);
@@ -159,7 +327,8 @@ export default function Storefront() {
       setSizeError(true);
       return;
     }
-    const existing = cart.find((row) => row.id === active.id && row.size === size);
+    const variant = { id: active.id, size, color };
+    const existing = cart.find((row) => cartRowKey(row) === cartRowKey(variant));
     if (existing && existing.quantity >= 10) {
       setNotice('Önizlemede bir üründen en fazla 10 adet ekleyebilirsin.');
       return;
@@ -167,13 +336,11 @@ export default function Storefront() {
     setCart((previous) =>
       existing
         ? previous.map((row) =>
-            row.id === active.id && row.size === size
-              ? { ...row, quantity: row.quantity + 1 }
-              : row,
+            cartRowKey(row) === cartRowKey(variant) ? { ...row, quantity: row.quantity + 1 } : row,
           )
-        : [...previous, { id: active.id, size, quantity: 1 }],
+        : [...previous, { ...variant, quantity: 1 }],
     );
-    setCheckout(false);
+
     setCartOpen(true);
   };
   let shown: Product[] = filterCatalog(
@@ -249,18 +416,29 @@ export default function Storefront() {
         İçeriğe geç
       </a>
       <div className="announcement">
-        <span>Her halinle, kendin gibi.</span>
-        <span>
+        <span>Modern Original Style ' Stand Out</span>
+        <a
+          href={sitePath(`/?kategori=${encodeURIComponent('Yeni Gelenler')}`)}
+          onClick={(event) => {
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            event.preventDefault();
+            navigate('collection', 'Yeni Gelenler');
+          }}
+        >
           Yeni sezonu keşfet <ArrowRight size={13} />
-        </span>
+        </a>
       </div>
       <header className="header">
         <div className="header-main wrap">
           <button
             className="icon-button mobile-menu"
-            aria-label="Menüyü aç"
+            aria-label={menuOpen ? 'Menüyü kapat' : 'Menüyü aç'}
             aria-expanded={menuOpen}
-            onClick={() => setMenuOpen(!menuOpen)}
+            aria-controls="store-navigation"
+            onClick={() => {
+              setMenuOpen(!menuOpen);
+              setSearchOpen(false);
+            }}
           >
             {menuOpen ? <X /> : <Menu />}
           </button>
@@ -271,9 +449,10 @@ export default function Storefront() {
               e.preventDefault();
               navigate('home');
             }}
-            aria-label="Mosso ana sayfa"
+            aria-label="mos’so ana sayfa"
           >
-            <img src={sitePath('/images/mosso-logo.webp')} alt="mosso" />
+            <span className="brand-wordmark">mos’so</span>
+            <span className="brand-tagline">Modern Original Style ' Stand Out</span>
           </a>
           <form
             className="search desktop-search"
@@ -295,12 +474,21 @@ export default function Storefront() {
           <div className="header-actions">
             <button
               className="icon-button mobile-search"
-              aria-label="Aramayı aç"
-              onClick={() => setSearchOpen(!searchOpen)}
+              aria-label={searchOpen ? 'Aramayı kapat' : 'Aramayı aç'}
+              aria-expanded={searchOpen}
+              aria-controls="mobile-product-search"
+              onClick={() => {
+                setSearchOpen(!searchOpen);
+                setMenuOpen(false);
+              }}
             >
               <Search />
             </button>
-            <ProfileMenu />
+            <ProfileMenu
+              signedIn={signedIn}
+              onNavigate={navigateAccount}
+              onLogout={logoutPreview}
+            />
             <button
               className="icon-button"
               aria-label={`Favorilerim (${favorites.length})`}
@@ -315,7 +503,6 @@ export default function Storefront() {
               aria-label={`Sepetim (${count})`}
               onClick={() => {
                 setCartOpen(true);
-                setCheckout(false);
               }}
             >
               <ShoppingBag />
@@ -326,6 +513,7 @@ export default function Storefront() {
         </div>
         {searchOpen && (
           <form
+            id="mobile-product-search"
             className="search mobile-search-form"
             onSubmit={(e) => {
               e.preventDefault();
@@ -344,7 +532,11 @@ export default function Storefront() {
             <button type="submit">Ara</button>
           </form>
         )}
-        <nav className={`navigation ${menuOpen ? 'open' : ''}`} aria-label="Ana menü">
+        <nav
+          id="store-navigation"
+          className={`navigation ${menuOpen ? 'open' : ''}`}
+          aria-label="Ana menü"
+        >
           <div className="wrap nav-inner">
             {navigationCategories.map((cat) => (
               <button
@@ -362,11 +554,71 @@ export default function Storefront() {
               </button>
             ))}
             <button onClick={() => navigate('collection')}>Tüm Koleksiyon</button>
-            <span className="nav-note">Senin stilin. Senin Mosso’n.</span>
+            <span className="nav-note">Senin stilin. Senin mos’so’n.</span>
           </div>
         </nav>
       </header>
       <main id="main">
+        {view === 'checkout' && (
+          <CheckoutPage
+            onCartChange={(rows) => setCart(validateCart(rows, products))}
+            addresses={addresses}
+            setAddresses={setAddresses}
+            cart={cart}
+            signedIn={signedIn}
+            onLogin={() => {
+              pendingCheckout.current = true;
+              navigateAccount('Giriş yap / Kayıt ol');
+            }}
+            onBack={() => navigate('collection')}
+            onComplete={completeOrder}
+            onOrders={() => navigateAccount('Siparişlerim')}
+          />
+        )}
+        {view === 'account' && (
+          <AccountPanel
+            onSaveContact={setSupportContact}
+            addresses={addresses}
+            setAddresses={setAddresses}
+            key={signedIn ? 'signed-in' : 'guest'}
+            orders={orders}
+            onCancelOrder={(id, items) => {
+              const order = orders.find((order) => order.id === id);
+              if (!order) return;
+              const updated = cancelOrder(order, items) as DemoOrder;
+              if (updated === order) return;
+              saveOrders(
+                orders.map((order) => (order.id === id ? updated : order)),
+                'Seçtiğin ürünler iptal edildi.',
+              );
+            }}
+            onReturnOrder={(id, selection) => {
+              const order = orders.find((order) => order.id === id);
+              if (!order) return;
+              const updated = requestOrderReturn(order, selection) as DemoOrder;
+              if (updated === order) return;
+              saveOrders(
+                orders.map((order) => (order.id === id ? updated : order)),
+                'İade talebin alındı.',
+              );
+            }}
+            onExampleOrders={() =>
+              saveOrders(
+                [
+                  ...orders,
+                  ...exampleOrders().filter(
+                    (sample) => !orders.some((order) => order.id === sample.id),
+                  ),
+                ].slice(0, 50),
+              )
+            }
+            section={accountSection}
+            signedIn={signedIn}
+            onLogin={loginPreview}
+            onSection={navigateAccount}
+            onClose={() => navigate('home')}
+          />
+        )}
         {view === 'home' && (
           <>
             <section className="hero wrap">
@@ -382,7 +634,7 @@ export default function Storefront() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.65 }}
                 >
-                  <p className="eyebrow">MOSSO / YENİ SEZON</p>
+                  <p className="eyebrow">MOS’SO / YENİ SEZON</p>
                   <h1>
                     Tarzın,
                     <br />
@@ -467,9 +719,14 @@ export default function Storefront() {
                 </button>
               </div>
               <div className="product-grid">{products.slice(-16, -8).map(card)}</div>
+              <div className="arrivals-collection-link">
+                <button onClick={() => navigate('collection', 'Tümü')}>
+                  Tüm koleksiyonu keşfet <ArrowRight size={18} />
+                </button>
+              </div>
             </section>
             <section className="brand-story wrap">
-              <span className="story-label">MOSSO’NUN DÜNYASI</span>
+              <span className="story-label">MOS’SO’NUN DÜNYASI</span>
               <h2>
                 Bir kalıba değil,
                 <br />
@@ -643,16 +900,16 @@ export default function Storefront() {
                 {active.tag && <span className="tag">{active.tag}</span>}
               </div>
               <div className="detail-info">
-                <p className="eyebrow">MOSSO / {active.category.toLocaleUpperCase('tr')}</p>
+                <p className="eyebrow">MOS’SO / {active.category.toLocaleUpperCase('tr')}</p>
                 <h1>{active.name}</h1>
                 <div className="detail-price">
                   {money(active.price)} {active.oldPrice && <del>{money(active.oldPrice)}</del>}
                 </div>
                 <p className="detail-description">{active.description}</p>
-                <div className="color-line">
-                  Renk: <strong>{active.colors[0].name}</strong>
-                  <span className="color-choice" style={{ background: active.colors[0].hex }} />
-                </div>
+                <ColorSelector colors={active.colors} value={color} onChange={setColor} />
+                <p className="color-photo-note">
+                  Ürün görseli {active.colors[0].name.toLocaleLowerCase('tr')} renk örneğidir.
+                </p>
                 <div className="size-heading">
                   <strong>Beden seç</strong>
                   <span>{size || 'Henüz seçilmedi'}</span>
@@ -723,8 +980,30 @@ export default function Storefront() {
             <div className="product-grid related">
               {products
                 .filter((p) => p.id !== active.id)
-                .slice(0, 4)
+                .sort(
+                  (a, b) =>
+                    Number(b.category === active.category) - Number(a.category === active.category),
+                )
+                .slice(0, relatedCount)
                 .map(card)}
+            </div>
+            <div className="related-more" ref={relatedEnd}>
+              <p role="status">
+                {Math.min(relatedCount, products.length - 1)} / {products.length - 1} ürün
+                gösteriliyor
+              </p>
+              {relatedCount < products.length - 1 ? (
+                <button
+                  className="text-link"
+                  onClick={() =>
+                    setRelatedCount((count) => Math.min(count + 8, products.length - 1))
+                  }
+                >
+                  Daha fazla ürün keşfet <Plus size={17} />
+                </button>
+              ) : (
+                <span>Koleksiyondaki tüm parçaları gördün.</span>
+              )}
             </div>
           </section>
         )}
@@ -734,10 +1013,12 @@ export default function Storefront() {
         home={() => navigate('home')}
         favorites={() => navigate('favorites')}
         cart={() => {
-          setCheckout(false);
           setCartOpen(true);
         }}
       />
+      {!cartOpen && !menuOpen && !filtersOpen && !searchOpen && (
+        <SupportWidget contact={signedIn ? supportContact : null} />
+      )}
       <CatalogFilters
         open={filtersOpen}
         close={() => setFiltersOpen(false)}
@@ -792,12 +1073,12 @@ export default function Storefront() {
                 {cart.map((row) => {
                   const product = products.find((p) => p.id === row.id)!;
                   return (
-                    <article className="cart-item" key={`${row.id}-${row.size}`}>
+                    <article className="cart-item" key={cartRowKey(row)}>
                       <img src={sitePath(product.image)} alt={product.name} />
                       <div>
                         <h3>{product.name}</h3>
                         <p>
-                          {product.colors[0].name} / {row.size}
+                          {row.color || product.colors[0].name} / {row.size}
                         </p>
                         <strong>{money(product.price)}</strong>
                         <div className="quantity">
@@ -847,22 +1128,9 @@ export default function Storefront() {
                   <strong>{money(total)}</strong>
                 </div>
                 <p>Örnek fiyatlar · Kargo hesaplanmaz.</p>
-                {checkout ? (
-                  <div className="checkout-notice" role="status">
-                    <Check size={22} />
-                    <div>
-                      <strong>Alışveriş akışı burada tamamlanıyor.</strong>
-                      <p>
-                        Bu bir frontend önizlemesi. Sipariş oluşturulmadı ve ödeme alınmadı. Ödeme
-                        bağlantısını backend aşamasında kuracağız.
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <button className="primary" onClick={() => setCheckout(true)}>
-                    Ödeme adımını önizle <ArrowRight size={18} />
-                  </button>
-                )}
+                <button className="primary" onClick={startCheckout}>
+                  Ödeme adımlarına geç <ArrowRight size={18} />
+                </button>
                 <button className="text-link continue-shopping" onClick={() => setCartOpen(false)}>
                   Alışverişe devam et
                 </button>

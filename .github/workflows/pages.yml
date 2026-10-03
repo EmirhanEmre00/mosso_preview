@@ -23,6 +23,7 @@ jobs:
       - run: npm run build
         env:
           GITHUB_PAGES: 'true'
+          NEXT_PUBLIC_SUPPORT_FORM_ENDPOINT: ${{ vars.NEXT_PUBLIC_SUPPORT_FORM_ENDPOINT }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: out

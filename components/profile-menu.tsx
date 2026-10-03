@@ -2,8 +2,17 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { UserRound } from 'lucide-react';
+import { type AccountSection } from './account-panel';
 
-export default function ProfileMenu() {
+export default function ProfileMenu({
+  signedIn,
+  onNavigate,
+  onLogout,
+}: {
+  signedIn: boolean;
+  onNavigate: (section: AccountSection) => void;
+  onLogout: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -38,13 +47,13 @@ export default function ProfileMenu() {
       <button
         ref={trigger}
         className="icon-button"
-        aria-label="Hesabım"
+        aria-label={signedIn ? 'Hesabım' : 'Giriş yap'}
         aria-expanded={open}
         aria-controls="profile-panel"
         onClick={() => setOpen(!open)}
       >
         <UserRound />
-        <span className="action-label">Hesabım</span>
+        <span className="action-label">{signedIn ? 'Hesabım' : 'Giriş yap'}</span>
       </button>
       {open && (
         <div
@@ -53,13 +62,31 @@ export default function ProfileMenu() {
           role="region"
           aria-label="Hesap seçenekleri"
         >
-          <strong>Senin Mosso’n</strong>
-          <p>Hesap özellikleri yakında burada.</p>
-          {['Giriş yap / Kayıt ol', 'Hesabım', 'Siparişlerim', 'Adreslerim'].map((label) => (
-            <button key={label} type="button" aria-disabled="true">
-              {label}
+          <strong>Senin mos’so dünyan</strong>
+          {(signedIn ? ['Hesabım', 'Siparişlerim', 'Adreslerim'] : ['Giriş yap / Kayıt ol']).map(
+            (label) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onNavigate(label as AccountSection);
+                }}
+              >
+                {label}
+              </button>
+            ),
+          )}
+          {signedIn && (
+            <button
+              onClick={() => {
+                setOpen(false);
+                onLogout();
+              }}
+            >
+              Çıkış yap
             </button>
-          ))}
+          )}
         </div>
       )}
     </div>

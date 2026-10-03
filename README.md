@@ -1,15 +1,9 @@
-# Mosso preview
-
-Müşteri incelemesi için public kopya. Asıl geliştirme deposu ayrıdır.
-
-Önizleme: https://emirhanemre00.github.io/mosso_preview/
-
-Bu repoda `main` dalına gönderilen değişiklikler GitHub Pages üzerinden otomatik yayımlanır.
+# Mosso storefront
 
 Mor/beyaz marka kimliğiyle kadın giyim mağazasının ilk frontend sürümü.
-Hedef gerçek satış yapan bir mağazadır. **Bu aşama ödeme almayan, örnek verili inceleme önizlemesidir.**
+Hedef gerçek satış yapan bir mağazadır. **Bu aşama ödeme almayan, örnek verili yerel önizlemedir.**
 
-Katalog: 40 örnek ürün, hiyerarşik kategoriler ve 22 temsili ürün fotoğrafı. Beden, renk,
+Katalog: 24 örnek ürün, 10 ürün kategorisi, 12 temsili ürün fotoğrafı. Beden, renk,
 fiyat ve indirim filtreleri; fiyat/yeni ürün sıralaması; mobil filtre paneli ve katlanabilir footer.
 Responsive açıklamalar: [Ders 11](docs/responsive-guide.md).
 

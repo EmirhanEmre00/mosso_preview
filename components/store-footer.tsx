@@ -39,12 +39,12 @@ export default function StoreFooter({
               home();
             }}
           >
-            mosso
+            mos’so
           </a>
-          <p className="footer-tagline">Her halinle, kendin gibi.</p>
+          <p className="footer-tagline">Modern Original Style ' Stand Out</p>
           <p className="footer-intro">
             Ereğli’den gardırobuna. Günlük rahatlıktan özel günlere, kendi tarzını bulacağın
-            parçalar Mosso’da.
+            parçalar mos’so’da.
           </p>
           <div className="footer-socials">
             <a
@@ -184,7 +184,7 @@ export default function StoreFooter({
         <p>Tasarım önizlemesi. Ürün, görsel ve fiyatlar örnektir; gerçek satış yapılmaz.</p>
       </div>
       <div className="footer-bottom wrap">
-        <span>© {new Date().getFullYear()} Mosso</span>
+        <span>© {new Date().getFullYear()} mos’so</span>
         <a href={sitePath('/ogrenme/')} target="_blank" rel="noreferrer">
           Proje rehberi <ArrowUpRight size={12} />
         </a>

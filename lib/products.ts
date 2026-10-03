@@ -334,6 +334,26 @@ products.push(
     description: `${name}, ${color.toLocaleLowerCase('tr')} tonuyla farklı kombinlerine eşlik eder. Kendi tarzına göre tamamlayabileceğin ${category === 'Şal & Eşarp' ? 'bir aksesuar' : 'bir gardırop parçası'}. Bu ürün katalog deneyimi için hazırlanmış bir örnektir.`,
   })),
 );
+// Preview color variants; product photos currently show the original color.
+for (const product of products) {
+  const alternatives =
+    product.category === 'Pantolon' && product.colors[0].name === 'İndigo'
+      ? [
+          { name: 'Mavi', hex: '#7189a4' },
+          { name: 'Siyah', hex: '#252329' },
+        ]
+      : [
+          { name: 'Ekru', hex: '#eae6dc' },
+          { name: 'Siyah', hex: '#252329' },
+          { name: 'Lila', hex: '#b6a0c3' },
+        ];
+  product.colors = [
+    ...product.colors,
+    ...alternatives.filter(
+      (color) => !product.colors.some((existing) => existing.name === color.name),
+    ),
+  ].slice(0, 3);
+}
 export const catalogColors = Array.from(
   new Map(products.flatMap((p) => p.colors).map((c) => [c.name, c])).values(),
 );
@@ -356,5 +376,6 @@ export const money = (amount: number) =>
   new Intl.NumberFormat('tr-TR', {
     style: 'currency',
     currency: 'TRY',
-    maximumFractionDigits: 0,
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+    maximumFractionDigits: 2,
   }).format(amount);

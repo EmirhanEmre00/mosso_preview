@@ -2,6 +2,26 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateCart, cartTotal } from '../lib/cart.mjs';
 const catalog = [{ id: 'tunik', sizes: ['S', 'M'], price: 899 }];
+const coloredCatalog = [{ ...catalog[0], colors: [{ name: 'Lila' }, { name: 'Siyah' }] }];
+
+test('seçilen renk korunur; farklı renkler ayrı varyantlar olarak fiyatlanır', () => {
+  const rows = [
+    { id: 'tunik', size: 'M', color: 'Lila', quantity: 1 },
+    { id: 'tunik', size: 'M', color: 'Siyah', quantity: 2 },
+  ];
+  assert.deepEqual(validateCart(rows, coloredCatalog), rows);
+  assert.equal(cartTotal(rows, coloredCatalog), 2697);
+  assert.deepEqual(validateCart([...rows, rows[0]], coloredCatalog), rows);
+});
+
+test('eski renksiz kayıt ilk rengi alır, katalog dışı renk reddedilir', () => {
+  const row = { id: 'tunik', size: 'M', quantity: 1 };
+  assert.deepEqual(validateCart([row], coloredCatalog), [{ ...row, color: 'Lila' }]);
+  assert.deepEqual(validateCart([{ ...row, color: 'Bilinmeyen' }], coloredCatalog), []);
+  assert.deepEqual(validateCart([row, { ...row, color: 'Lila' }], coloredCatalog), [
+    { ...row, color: 'Lila' },
+  ]);
+});
 test('bozuk tarayıcı kaydı ve geçersiz varyantlar uygulamayı bozamaz', () => {
   assert.deepEqual(validateCart(null, catalog), []);
   assert.deepEqual(
