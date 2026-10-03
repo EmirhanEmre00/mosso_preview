@@ -41,6 +41,14 @@ import {
 } from '@/lib/demo-orders';
 import { cancelOrder, requestOrderReturn } from '@/lib/order-lifecycle.mjs';
 import AccountPanel, { type AccountSection, type Address } from './account-panel';
+import {
+  ADDRESSES_KEY,
+  ACCOUNT_KEY,
+  validateAddresses,
+  validateAccount,
+  readSessionValue,
+  writeSessionValue,
+} from '@/lib/session-account.mjs';
 const accountRoutes: Record<AccountSection, string> = {
   'Giriş yap / Kayıt ol': '/giris/',
   Hesabım: '/hesabim/',
@@ -94,7 +102,12 @@ export default function Storefront({
   const [notice, setNotice] = useState('');
   const [orders, setOrders] = useState<DemoOrder[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [supportContact, setSupportContact] = useState<SupportContact | null>(null);
+  const [account, setAccount] = useState(() => validateAccount(null));
+  const supportContact: SupportContact = {
+    name: `${account.profile.name} ${account.profile.surname}`.trim(),
+    email: account.profile.email,
+    phone: account.profile.phone,
+  };
   const pendingCheckout = useRef(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -131,6 +144,8 @@ export default function Storefront({
       /* Broken or blocked browser storage must not prevent browsing. */
     }
     setOrders(readDemoOrders());
+    setAddresses(readSessionValue(ADDRESSES_KEY, validateAddresses));
+    setAccount(readSessionValue(ACCOUNT_KEY, validateAccount));
     setLoaded(true);
     const sync = () => {
       let authenticated = false;
@@ -244,14 +259,39 @@ export default function Storefront({
   const logoutPreview = () => {
     try {
       sessionStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(ADDRESSES_KEY);
+      sessionStorage.removeItem(ACCOUNT_KEY);
     } catch {}
     try {
       localStorage.removeItem(REMEMBER_KEY);
     } catch {}
     setSignedIn(false);
-    setSupportContact(null);
+    setAccount(validateAccount(null));
     setAddresses([]);
     navigateAccount('Giriş yap / Kayıt ol', false);
+  };
+  const saveAddresses = (next: Address[]) => {
+    const saved = validateAddresses(next);
+    setAddresses(saved);
+    writeSessionValue(ADDRESSES_KEY, saved);
+  };
+  const saveAccount = (next: typeof account) => {
+    const saved = validateAccount(next);
+    setAccount(saved);
+    writeSessionValue(ACCOUNT_KEY, saved);
+  };
+  const saveContact = (contact: SupportContact) => {
+    const [name, ...surname] = contact.name.trim().split(/\s+/);
+    saveAccount({
+      ...account,
+      profile: {
+        ...account.profile,
+        name,
+        surname: surname.join(' '),
+        email: contact.email,
+        phone: contact.phone,
+      },
+    });
   };
   const startCheckout = () => {
     setCheckoutFinished(false);
@@ -566,12 +606,12 @@ export default function Storefront({
         )}
       </header>
       <main id="main">
-        {view === 'checkout' && (
+        {view === 'checkout' && loaded && (
           <CheckoutPage
             onCompletionChange={setCheckoutFinished}
             onCartChange={(rows) => setCart(validateCart(rows, products))}
             addresses={addresses}
-            setAddresses={setAddresses}
+            setAddresses={saveAddresses}
             cart={cart}
             signedIn={signedIn}
             onLogin={() => {
@@ -583,11 +623,15 @@ export default function Storefront({
             onOrders={() => navigateAccount('Siparişlerim')}
           />
         )}
-        {view === 'account' && (
+        {view === 'account' && loaded && (
           <AccountPanel
-            onSaveContact={setSupportContact}
+            onSaveContact={saveContact}
+            profile={account.profile}
+            preferences={account.preferences}
+            onSaveProfile={(profile) => saveAccount({ ...account, profile })}
+            onSavePreferences={(preferences) => saveAccount({ ...account, preferences })}
             addresses={addresses}
-            setAddresses={setAddresses}
+            setAddresses={saveAddresses}
             key={signedIn ? 'signed-in' : 'guest'}
             orders={orders}
             onCancelOrder={(id, items) => {

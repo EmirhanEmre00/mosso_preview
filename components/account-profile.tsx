@@ -13,7 +13,9 @@ import {
   LockKeyhole,
 } from 'lucide-react';
 import PasswordField from './password-field';
-import type { SupportContact } from './support-widget';
+import { emptyProfile, defaultPreferences } from '@/lib/session-account.mjs';
+export type Profile = typeof emptyProfile;
+export type Preferences = typeof defaultPreferences;
 
 const communicationOptions = [
   {
@@ -49,21 +51,18 @@ const communicationOptions = [
 ] as const;
 
 export default function AccountProfile({
-  onSaveContact,
+  profile: savedProfile,
+  preferences: savedPreferences,
+  onSaveProfile,
+  onSavePreferences,
 }: {
-  onSaveContact: (contact: SupportContact) => void;
+  profile: Profile;
+  preferences: Preferences;
+  onSaveProfile: (profile: Profile) => void;
+  onSavePreferences: (preferences: Preferences) => void;
 }) {
-  const [profile, setProfile] = useState({
-    name: '',
-    surname: '',
-    email: '',
-    phone: '',
-    birthday: '',
-    gender: '',
-  });
-  const [preferences, setPreferences] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(communicationOptions.map(({ key }) => [key, true])),
-  );
+  const [profile, setProfile] = useState(savedProfile);
+  const [preferences, setPreferences] = useState(savedPreferences);
   const [profileMessage, setProfileMessage] = useState('');
   const [preferencesMessage, setPreferencesMessage] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
@@ -83,11 +82,7 @@ export default function AccountProfile({
             className="account-form account-form-grid"
             onSubmit={(e) => {
               e.preventDefault();
-              onSaveContact({
-                name: `${profile.name} ${profile.surname}`.trim(),
-                email: profile.email,
-                phone: profile.phone,
-              });
+              onSaveProfile(profile);
               setProfileMessage('Bilgilerin güncellendi.');
             }}
           >
@@ -170,6 +165,7 @@ export default function AccountProfile({
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              onSavePreferences(preferences);
               setPreferencesMessage('İletişim tercihlerin güncellendi.');
             }}
           >

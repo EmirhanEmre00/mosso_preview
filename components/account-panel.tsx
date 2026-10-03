@@ -5,7 +5,7 @@ import OrderList from './order-list';
 import type { DemoOrder, OrderRow, ReturnSelection } from '@/lib/demo-orders';
 import { ArrowRight, MapPin, Plus, Trash2 } from 'lucide-react';
 import PasswordField from './password-field';
-import AccountProfile from './account-profile';
+import AccountProfile, { type Profile, type Preferences } from './account-profile';
 import SocialLoginButtons from './social-login-buttons';
 import type { SupportContact } from './support-widget';
 import PhoneInput from './phone-input';
@@ -38,6 +38,10 @@ export default function AccountPanel({
   addresses,
   setAddresses,
   onSaveContact,
+  profile,
+  preferences,
+  onSaveProfile,
+  onSavePreferences,
 }: {
   section: AccountSection;
   signedIn: boolean;
@@ -48,6 +52,10 @@ export default function AccountPanel({
   addresses: Address[];
   setAddresses: (addresses: Address[]) => void;
   onSaveContact: (contact: SupportContact) => void;
+  profile: Profile;
+  preferences: Preferences;
+  onSaveProfile: (profile: Profile) => void;
+  onSavePreferences: (preferences: Preferences) => void;
   onLogin: (remember?: boolean) => void;
   onClose: () => void;
   onSection: (section: AccountSection) => void;
@@ -209,7 +217,14 @@ export default function AccountPanel({
               </form>
             </>
           )}
-          {section === 'Hesabım' && <AccountProfile onSaveContact={onSaveContact} />}
+          {section === 'Hesabım' && (
+            <AccountProfile
+              profile={profile}
+              preferences={preferences}
+              onSaveProfile={onSaveProfile}
+              onSavePreferences={onSavePreferences}
+            />
+          )}
           {section === 'Siparişlerim' && (
             <OrderList
               orders={orders}
