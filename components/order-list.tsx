@@ -27,7 +27,7 @@ import {
 import {
   canCancelOrder,
   canRequestReturn,
-  orderLabel,
+  orderOverview,
   returnReasons,
   availableOrderRows,
   getReturnRequests,
@@ -62,7 +62,7 @@ function downloadSummary(order: DemoOrder) {
       return `<tr><td>${escape(p.name)}${cancelled ? `<br>${cancelled} adet iptal edildi` : ''}${requested ? `<br>${requested} adet için iade kaydı` : ''}</td><td>${escape(row.color || p.colors[0].name)}</td><td>${escape(row.size)}</td><td>${row.quantity}</td><td>${escape(money(p.price))}</td><td>${escape(money(p.price * row.quantity))}</td></tr>`;
     })
     .join('');
-  const html = `<!doctype html><html lang="tr"><meta charset="utf-8"><title>${escape(order.id)} · mos’so sipariş belgesi</title><style>body{font:15px Arial,sans-serif;color:#28212d;max-width:960px;margin:50px auto;padding:24px}h1{color:#792b87;font-size:42px}table{width:100%;border-collapse:collapse;margin:32px 0}th,td{text-align:left;padding:12px;border-bottom:1px solid #ddd}aside{padding:16px;background:#f5eff7;line-height:1.7}small{color:#666}@media print{body{margin:0}aside{border:1px solid #aaa}}</style><h1>mos’so</h1><p>Modern Original Style ' Stand Out</p><h2>Sipariş özeti</h2><p>Sipariş: ${escape(order.id)}<br>Tarih: ${escape(new Date(order.date).toLocaleString('tr-TR'))}<br>Durum: ${escape(orderLabel(order.status))}</p><table><thead><tr><th>Ürün</th><th>Renk</th><th>Beden</th><th>Adet</th><th>Birim fiyat</th><th>Satır toplamı</th></tr></thead><tbody>${rows}</tbody></table><p>Ürünler toplamı: <strong>${escape(money(totals.originalTotal))}</strong><br>Ürün indirimi: ${escape(money(totals.productDiscount))}<br>Kupon indirimi: ${escape(money(totals.discount))}<br>KDV hariç tutar: ${escape(money(totals.netTotal))}<br>KDV (%${totals.vatRate}): ${escape(money(totals.vat))}<br>Genel toplam (KDV dahil): <strong>${escape(money(totals.total))}</strong><br>Ödeme yöntemi: ${escape(order.paymentMethod || 'Kredi Kartı')}<br>Kargo: 0 TL</p><small>Bu belgeyi PDF olarak kaydedebilirsin.</small></html>`;
+  const html = `<!doctype html><html lang="tr"><meta charset="utf-8"><title>${escape(order.id)} · mos’so sipariş belgesi</title><style>body{font:15px Arial,sans-serif;color:#28212d;max-width:960px;margin:50px auto;padding:24px}h1{color:#792b87;font-size:42px}table{width:100%;border-collapse:collapse;margin:32px 0}th,td{text-align:left;padding:12px;border-bottom:1px solid #ddd}aside{padding:16px;background:#f5eff7;line-height:1.7}small{color:#666}@media print{body{margin:0}aside{border:1px solid #aaa}}</style><h1>mos’so</h1><p>Modern Original Style ' Stand Out</p><h2>Sipariş özeti</h2><p>Sipariş: ${escape(order.id)}<br>Tarih: ${escape(new Date(order.date).toLocaleString('tr-TR'))}<br>Durum: ${escape(orderOverview(order).label)}</p><table><thead><tr><th>Ürün</th><th>Renk</th><th>Beden</th><th>Adet</th><th>Birim fiyat</th><th>Satır toplamı</th></tr></thead><tbody>${rows}</tbody></table><p>Ürünler toplamı: <strong>${escape(money(totals.originalTotal))}</strong><br>Ürün indirimi: ${escape(money(totals.productDiscount))}<br>Kupon indirimi: ${escape(money(totals.discount))}<br>KDV hariç tutar: ${escape(money(totals.netTotal))}<br>KDV (%${totals.vatRate}): ${escape(money(totals.vat))}<br>Genel toplam (KDV dahil): <strong>${escape(money(totals.total))}</strong><br>Ödeme yöntemi: ${escape(order.paymentMethod || 'Kredi Kartı')}<br>Kargo: 0 TL</p><small>Bu belgeyi PDF olarak kaydedebilirsin.</small></html>`;
   const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
   const a = document.createElement('a');
   a.href = url;
@@ -110,6 +110,7 @@ export default function OrderList({
   }, [selected]);
   const selectedOrder = orders.find((o) => o.id === selected);
   const detail = selectedOrder ? refreshExampleOrder(selectedOrder) : undefined;
+  const overview = detail ? orderOverview(detail) : null;
   const detailTotals = detail ? previewTotals(detail.rows, products, detail.coupon) : null;
   const returnRequests: ReturnRequest[] = detail ? getReturnRequests(detail) : [];
   const availableRows: OrderRow[] = detail ? availableOrderRows(detail) : [];
@@ -152,26 +153,15 @@ export default function OrderList({
             </p>
           </div>
           <div className="order-heading-status">
-            <span className="order-status">{orderLabel(detail.status)}</span>
-            <p>
-              {
-                {
-                  pending: 'Siparişini kontrol ediyoruz.',
-                  received: 'Seçimlerin bize ulaştı, sırada özenle hazırlamak var.',
-                  preparing: 'Seçimlerin senin için özenle hazırlanıyor.',
-                  shipped: 'Siparişin yola çıktı, yeni favorilerin sana geliyor.',
-                  delivered: 'Güle güle kullan, yeni favorilerinle güzel günlere!',
-                  cancelled: 'Siparişin iptal edildi.',
-                }[detail.status]
-              }
-            </p>
+            <span className="order-status">{overview!.label}</span>
+            <p>{overview!.description}</p>
           </div>
         </header>
-        <OrderProgress status={detail.status} />
+        {overview!.hasActiveItems && <OrderProgress status={detail.status} />}
         {cancelledCount > 0 && (
           <p className="order-partial-status">
             {cancelledCount} adet iptal edildi
-            {detail.status !== 'cancelled' && ' · Diğer ürünlerinin sipariş süreci devam ediyor.'}
+            {overview!.hasActiveItems && ' · Diğer ürünlerinin sipariş süreci devam ediyor.'}
           </p>
         )}
         <div className="order-detail-layout">
@@ -505,7 +495,7 @@ export default function OrderList({
               <small>{new Date(order.date).toLocaleDateString('tr-TR')}</small>
               <h3>{order.id}</h3>
             </div>
-            <span className="order-status">{orderLabel(order.status)}</span>
+            <span className="order-status">{orderOverview(order).label}</span>
             <strong>{money(previewTotals(order.rows, products, order.coupon).total)}</strong>
           </header>
           <OrderProducts rows={order.rows} order={order} />

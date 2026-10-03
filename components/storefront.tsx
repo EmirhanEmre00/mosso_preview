@@ -537,31 +537,33 @@ export default function Storefront({
             <button type="submit">Ara</button>
           </form>
         )}
-        <nav
-          id="store-navigation"
-          className={`navigation ${menuOpen ? 'open' : ''}`}
-          aria-label="Ana menü"
-        >
-          <div className="wrap nav-inner">
-            {navigationCategories.map((cat) => (
-              <button
-                key={cat}
-                className={
-                  (view === 'collection' && categoryPath(category).includes(cat)) ||
-                  (view === 'product' && categoryPath(active.category).includes(cat))
-                    ? 'active'
-                    : ''
-                }
-                onClick={() => navigate('collection', cat)}
-              >
-                {cat}
-                {cat === 'Yeni Gelenler' && <span className="nav-dot" />}
-              </button>
-            ))}
-            <button onClick={() => navigate('collection')}>Tüm Koleksiyon</button>
-            <span className="nav-note">Senin stilin. Senin mos’so’n.</span>
-          </div>
-        </nav>
+        {(view !== 'checkout' || checkoutFinished) && (
+          <nav
+            id="store-navigation"
+            className={`navigation ${menuOpen ? 'open' : ''}`}
+            aria-label="Ana menü"
+          >
+            <div className="wrap nav-inner">
+              {navigationCategories.map((cat) => (
+                <button
+                  key={cat}
+                  className={
+                    (view === 'collection' && categoryPath(category).includes(cat)) ||
+                    (view === 'product' && categoryPath(active.category).includes(cat))
+                      ? 'active'
+                      : ''
+                  }
+                  onClick={() => navigate('collection', cat)}
+                >
+                  {cat}
+                  {cat === 'Yeni Gelenler' && <span className="nav-dot" />}
+                </button>
+              ))}
+              <button onClick={() => navigate('collection')}>Tüm Koleksiyon</button>
+              <span className="nav-note">Senin stilin. Senin mos’so’n.</span>
+            </div>
+          </nav>
+        )}
       </header>
       <main id="main">
         {view === 'checkout' && (

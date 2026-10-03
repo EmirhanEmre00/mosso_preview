@@ -9,6 +9,7 @@ import {
   getReturnRequests,
   orderStages,
   returnReasons,
+  orderOverview,
 } from '../lib/order-lifecycle.mjs';
 
 const tunic = { id: 'tunik', size: 'M', color: 'Lila', quantity: 2 };
@@ -23,6 +24,54 @@ const returnSelection = (items = [oneTunic], category = 'size', description = ''
   items,
   category,
   description,
+});
+
+test('tüm ürünler iptal ve iadeye dağıtıldığında sipariş özeti teslimat aşamasında kalmaz', () => {
+  for (const cancelFirst of [true, false]) {
+    const mixed = cancelFirst
+      ? requestOrderReturn(cancelOrder(makeOrder(), [jeans]), returnSelection([tunic]))
+      : cancelOrder(requestOrderReturn(makeOrder(), returnSelection([tunic])), [jeans]);
+    assert.equal(mixed.status, 'received');
+    assert.equal(orderOverview(mixed).label, 'İptal ve iade sürecinde');
+    assert.equal(orderOverview(mixed).hasActiveItems, false);
+    for (const status of ['requested', 'in_transit', 'inspection', 'approved', 'refund_pending']) {
+      const pending = {
+        ...mixed,
+        returnRequests: mixed.returnRequests.map((request) => ({ ...request, status })),
+      };
+      assert.equal(orderOverview(pending).label, 'İptal ve iade sürecinde');
+    }
+    const completed = {
+      ...mixed,
+      returnRequests: mixed.returnRequests.map((request) => ({ ...request, status: 'completed' })),
+    };
+    assert.equal(orderOverview(completed).label, 'İptal ve iade tamamlandı');
+  }
+});
+
+test('iade talebi tamamlanmış sayılmaz; kalan adetler ve reddedilen talepler sipariş sürecini korur', () => {
+  const partial = requestOrderReturn(
+    cancelOrder(makeOrder(), [oneTunic]),
+    returnSelection([jeans]),
+  );
+  assert.equal(orderOverview(partial).label, 'Sipariş alındı');
+  assert.equal(orderOverview(partial).hasActiveItems, true);
+  const returned = requestOrderReturn(makeOrder(), returnSelection([tunic, jeans]));
+  assert.equal(orderOverview(returned).label, 'İade sürecinde');
+  const rejected = {
+    ...returned,
+    returnRequests: returned.returnRequests.map((request) => ({ ...request, status: 'rejected' })),
+  };
+  assert.equal(orderOverview(rejected).label, 'Sipariş alındı');
+  assert.equal(orderOverview(rejected).hasActiveItems, true);
+  const completed = {
+    ...returned,
+    returnRequests: returned.returnRequests.map((request) => ({ ...request, status: 'completed' })),
+  };
+  assert.equal(orderOverview(completed).label, 'İade tamamlandı');
+  assert.equal(orderOverview(cancelOrder(makeOrder(), [tunic, jeans])).label, 'İptal edildi');
+  const legacy = { ...makeOrder(), returnRequest: { status: 'requested', reason: 'Eski neden' } };
+  assert.equal(orderOverview(legacy).label, 'İade sürecinde');
 });
 
 test('hazırlık aşamasından itibaren iptal hem arayüz hem işlem seviyesinde engellenir', () => {

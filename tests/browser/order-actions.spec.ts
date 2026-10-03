@@ -65,6 +65,42 @@ for (const action of ['cancel', 'return'] as const) {
   });
 }
 
+test('mixed cancellation and return update list and detail status after reload', async ({
+  page,
+}) => {
+  await openOrder(page);
+  const form = page.locator('#order-action-form');
+  await page.getByRole('button', { name: 'Ürün iptal et', exact: true }).click();
+  await form.getByRole('checkbox', { name: cropLabel, exact: true }).check();
+  await form.getByRole('button', { name: 'Seçilen ürünleri iptal et' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Evet, ürünleri iptal et' }).click();
+  await page.getByRole('button', { name: 'İade talebi oluştur', exact: true }).click();
+  await form.getByRole('checkbox', { name: tunicLabel, exact: true }).check();
+  await form.getByLabel('İade nedeni', { exact: true }).selectOption('size');
+  await form.getByRole('button', { name: 'İade talebini gönder' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Evet, talebi gönder' }).click();
+  await expect(page.locator('.order-heading-status .order-status')).toHaveText(
+    'İptal ve iade sürecinde',
+  );
+  await expect(page.getByRole('list', { name: 'Sipariş aşamaları' })).toHaveCount(0);
+  await expect(
+    page.getByText('Diğer ürünlerinin sipariş süreci devam ediyor.', { exact: false }),
+  ).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Ürün iptal et', exact: true })).toBeDisabled();
+  await expect(
+    page.getByRole('button', { name: 'İade talebi oluştur', exact: true }),
+  ).toBeDisabled();
+  await page.getByRole('link', { name: 'Tüm siparişler', exact: true }).click();
+  const entry = page.getByRole('link', { name: `${order.id} sipariş detayını aç`, exact: true });
+  await expect(entry.locator('.order-status')).toHaveText('İptal ve iade sürecinde');
+  await page.reload();
+  await expect(entry.locator('.order-status')).toHaveText('İptal ve iade sürecinde');
+  await entry.click();
+  await expect(page.locator('.order-heading-status .order-status')).toHaveText(
+    'İptal ve iade sürecinde',
+  );
+});
+
 test('partial cancellation leaves only the unprocessed quantity for a return', async ({ page }) => {
   await openOrder(page);
   await page.getByRole('button', { name: 'Ürün iptal et', exact: true }).click();
@@ -101,6 +137,7 @@ for (const width of [390, 1440]) {
       );
     });
     await page.goto('/odeme/');
+    await expect(page.getByRole('navigation', { name: 'Ana menü', exact: true })).toHaveCount(0);
     if (width <= 760)
       await page.getByRole('button', { name: 'Sepeti onayla', exact: true }).click();
     await page.getByLabel('Adres başlığı', { exact: true }).fill('Test adresi');
@@ -118,6 +155,7 @@ for (const width of [390, 1440]) {
     await expect(heading).toBeFocused();
     await expect(heading).toBeInViewport();
     await expect(page.getByRole('contentinfo')).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Ana menü', exact: true })).toHaveCount(1);
     await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
   });
 }
