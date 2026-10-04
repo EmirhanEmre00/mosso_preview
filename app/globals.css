@@ -84,6 +84,11 @@ summary:focus-visible {
   outline: 2px solid var(--purple);
   outline-offset: 5px;
 }
+/* Hide click/touch focus frames, including editable controls, while retaining
+   keyboard focus and the circular selected-color indicator. */
+html[data-focus-input='pointer'] :focus:not(.color-choice) {
+  outline: none !important;
+}
 button {
   transition:
     color 0.2s,
@@ -3116,9 +3121,9 @@ summary::-webkit-details-marker {
 .account-form textarea {
   resize: vertical;
 }
-.account-form input:focus,
-.account-form select:focus,
-.account-form textarea:focus {
+.account-form input:focus-visible,
+.account-form select:focus-visible,
+.account-form textarea:focus-visible {
   outline: 2px solid var(--purple);
   outline-offset: 2px;
 }
