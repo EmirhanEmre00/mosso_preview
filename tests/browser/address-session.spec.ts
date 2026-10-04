@@ -106,6 +106,10 @@ for (const width of [390, 1440]) {
     await phone.fill('');
     await phone.pressSequentially('5320000000');
     await expect(phone).toHaveValue('532 000 0000');
+    await phone.pressSequentially('987654');
+    await expect(phone).toHaveValue('532 000 0000');
+    await phone.fill('05320000000987654');
+    await expect(phone).toHaveValue('532 000 0000');
     await page.getByLabel('Doğum tarihi').fill('2000-01-02');
     await page.getByRole('radio', { name: 'Belirtmek istemiyorum' }).check();
     await page.getByRole('button', { name: 'Bilgileri kaydet' }).click();

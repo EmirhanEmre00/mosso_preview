@@ -22,7 +22,7 @@ export default function PhoneInput({
   const current = value ?? local;
   const update = (text: string) => {
     const digits = phoneInput(text);
-    const next = digits ? (digits.startsWith('0') ? digits : `0${digits}`) : '';
+    const next = digits ? (digits.startsWith('0') ? digits : `0${digits}`).slice(0, 11) : '';
     setLocal(next);
     onValueChange?.(next);
   };
