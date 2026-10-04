@@ -174,10 +174,16 @@ for (const width of [320, 390, 430, 1440]) {
       await expect(heading).toBeFocused();
       // Once the customer scrolls deliberately, layout updates must not pull them back.
       await page.mouse.wheel(0, 180);
-      await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(0);
-      const customerScroll = await page.evaluate(() => scrollY);
-      await page.evaluate(() => window.visualViewport?.dispatchEvent(new Event('resize')));
-      await expect.poll(() => page.evaluate(() => scrollY)).toBe(customerScroll);
+      // WebKit animates wheel input; wait for its final position before comparing.
+      await expect.poll(() => page.evaluate(() => scrollY)).toBe(180);
+      await page.evaluate(async () => {
+        window.visualViewport?.dispatchEvent(new Event('resize'));
+        // Let the application's scheduled alignment run before checking the position.
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        );
+      });
+      await expect.poll(() => page.evaluate(() => scrollY)).toBe(180);
     }
   });
 }
