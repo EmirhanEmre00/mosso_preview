@@ -3114,7 +3114,7 @@ summary::-webkit-details-marker {
   width: 100%;
   min-width: 0;
   border: 1px solid #dcd4e0;
-  border-radius: 7px;
+  border-radius: 2px;
   padding: 12px;
   font: inherit;
   background: white;
@@ -3129,7 +3129,7 @@ summary::-webkit-details-marker {
   width: 100%;
   min-width: 0;
   border: 1px solid #dcd4e0;
-  border-radius: 7px;
+  border-radius: 2px;
   background: white;
 }
 .phone-country {
