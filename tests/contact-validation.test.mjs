@@ -7,7 +7,6 @@ import {
   phoneInput,
   phoneDisplay,
   phoneText,
-  validPostalCode,
   validPhone,
   validAddress,
 } from '../lib/contact-validation.mjs';
@@ -34,11 +33,6 @@ test('phone display groups 3-3-4 digits without changing saved national numbers'
   assert.equal(phoneDisplay('05323'), '532 3');
   assert.equal(phoneText('05323244356'), '+90 532 324 4356');
   assert.equal(phoneText('551*****34'), '551*****34');
-});
-test('postal codes accept exactly five digits and remain optional for existing addresses', () => {
-  for (const value of [undefined, '', '54050']) assert.equal(validPostalCode(value), true);
-  for (const value of ['5405', '540500', '54abc', null, 54050])
-    assert.equal(validPostalCode(value), false);
 });
 test('telefon biçimleri yerel numaraya dönüşür, uzun ve hatalı numara geçmez', () => {
   for (const input of ['+90 (532) 123 45 67', '00905321234567', '5321234567', '05321234567']) {
@@ -70,6 +64,10 @@ test('adres kaydı boşluk, hatalı telefon veya başka ile bağlı ilçe kabul 
     address: 'Test Sokak No: 1',
   };
   assert.equal(validAddress(address), true);
+  assert.equal(
+    validAddress({ ...address, neighborhood: 'Kemalpaşa', addressType: 'corporate' }),
+    true,
+  );
   for (const patch of [
     { title: ' ' },
     { name: '' },
@@ -77,6 +75,11 @@ test('adres kaydı boşluk, hatalı telefon veya başka ile bağlı ilçe kabul 
     { phone: '551*****34' },
     { city: 'Konya' },
     { district: '' },
+    { neighborhood: '' },
+    { neighborhood: ' ' },
+    { neighborhood: 123 },
+    { neighborhood: 'a'.repeat(151) },
+    { addressType: 'unknown' },
   ]) {
     assert.equal(validAddress({ ...address, ...patch }), false);
   }

@@ -10,6 +10,7 @@ import SocialLoginButtons from './social-login-buttons';
 import type { SupportContact } from './support-widget';
 import PhoneInput from './phone-input';
 import LocationFields from './location-fields';
+import AddressTypeSelector, { type AddressType } from './address-type-selector';
 import { validAddress, phoneText } from '@/lib/contact-validation.mjs';
 
 const sections = ['Giriş yap / Kayıt ol', 'Hesabım', 'Siparişlerim', 'Adreslerim'] as const;
@@ -21,7 +22,8 @@ export type Address = {
   phone: string;
   city: string;
   district: string;
-  postalCode?: string;
+  neighborhood?: string;
+  addressType?: AddressType;
   address: string;
 };
 const blankAddress = {
@@ -30,7 +32,8 @@ const blankAddress = {
   phone: '',
   city: '',
   district: '',
-  postalCode: '',
+  neighborhood: '',
+  addressType: 'individual' as AddressType,
   address: '',
 };
 
@@ -260,20 +263,27 @@ export default function AccountPanel({
               <div className="account-addresses">
                 {addresses.map((address) => (
                   <article key={address.id}>
-                    <strong>{address.title}</strong>
+                    <strong>
+                      {address.title} ·{' '}
+                      {address.addressType === 'corporate' ? 'Kurumsal' : 'Bireysel'}
+                    </strong>
                     <p>
                       {address.name}
                       <br />
-                      {address.address}
+                      {[address.neighborhood, address.address].filter(Boolean).join(', ')}
                       <br />
-                      {address.district} / {address.city} {address.postalCode}
+                      {address.district} / {address.city}
                       <br />
                       {phoneText(address.phone)}
                     </p>
                     <div>
                       <button
                         onClick={() => {
-                          setDraft({ ...address, postalCode: address.postalCode ?? '' });
+                          setDraft({
+                            ...address,
+                            neighborhood: address.neighborhood ?? '',
+                            addressType: address.addressType ?? 'individual',
+                          });
                           setEditing(address.id);
                           setMessage('');
                         }}
@@ -312,7 +322,7 @@ export default function AccountPanel({
                     e.preventDefault();
                     if (!validAddress(draft)) {
                       setMessage(
-                        'Adresi kontrol et: geçerli telefon, il ve ilçe seçimi gerekiyor.',
+                        'Adresi kontrol et: geçerli telefon, il, ilçe ve mahalle seçimi gerekiyor.',
                       );
                       return;
                     }
@@ -326,6 +336,10 @@ export default function AccountPanel({
                     setMessage('Adres kaydedildi.');
                   }}
                 >
+                  <AddressTypeSelector
+                    value={draft.addressType}
+                    onChange={(addressType) => setDraft({ ...draft, addressType })}
+                  />
                   {(
                     [
                       { key: 'title', label: 'Adres başlığı', placeholder: 'Ev / İş' },
@@ -355,23 +369,9 @@ export default function AccountPanel({
                   <LocationFields
                     city={draft.city}
                     district={draft.district}
+                    neighborhood={draft.neighborhood}
                     onChange={(location) => setDraft({ ...draft, ...location })}
                   />
-                  <label>
-                    Posta kodu
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="postal-code"
-                      pattern="[0-9]{5}"
-                      maxLength={5}
-                      placeholder="54050"
-                      value={draft.postalCode}
-                      onChange={(event) =>
-                        setDraft({ ...draft, postalCode: event.target.value.replace(/\D/g, '') })
-                      }
-                    />
-                  </label>
                   <label className="account-wide">
                     Açık adres
                     <textarea
@@ -379,7 +379,7 @@ export default function AccountPanel({
                       maxLength={500}
                       rows={3}
                       value={draft.address}
-                      placeholder="Mahalle, sokak, bina ve daire numarası"
+                      placeholder="Sokak, bina ve daire numarası"
                       onChange={(e) => setDraft({ ...draft, address: e.target.value })}
                     />
                   </label>

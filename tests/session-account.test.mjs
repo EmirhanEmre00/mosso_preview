@@ -33,11 +33,16 @@ test('session addresses reject damaged entries and duplicate identifiers', () =>
     [address],
   );
 });
-test('postal code persists and malformed postal codes cannot enter the address book', () => {
-  assert.deepEqual(validateAddresses([{ ...address, postalCode: '54050' }]), [
-    { ...address, postalCode: '54050' },
-  ]);
-  assert.deepEqual(validateAddresses([{ ...address, postalCode: '54abc' }]), []);
+test('neighborhood and address type persist, obsolete postal codes are removed', () => {
+  assert.deepEqual(
+    validateAddresses([
+      { ...address, neighborhood: 'Kemalpaşa', addressType: 'corporate', postalCode: '54050' },
+    ]),
+    [{ ...address, neighborhood: 'Kemalpaşa', addressType: 'corporate' }],
+  );
+  assert.deepEqual(validateAddresses([{ ...address, neighborhood: '' }]), []);
+  assert.deepEqual(validateAddresses([{ ...address, addressType: 'unknown' }]), []);
+  assert.deepEqual(validateAddresses([{ ...address, postalCode: '54050' }]), [address]);
 });
 
 test('session account preserves all personal fields and explicit preference choices', () => {

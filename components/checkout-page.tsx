@@ -22,6 +22,7 @@ import PaymentMethods from './payment-methods';
 import type { Address } from './account-panel';
 import PhoneInput from './phone-input';
 import LocationFields from './location-fields';
+import AddressTypeSelector, { type AddressType } from './address-type-selector';
 import { validAddress, phoneText } from '@/lib/contact-validation.mjs';
 import './checkout-mobile.css';
 import { sitePath } from '@/lib/site-path';
@@ -54,7 +55,8 @@ export default function CheckoutPage({
     phone: addresses[0]?.phone ?? '',
     city: addresses[0]?.city ?? '',
     district: addresses[0]?.district ?? '',
-    postalCode: addresses[0]?.postalCode ?? '',
+    neighborhood: addresses[0] ? addresses[0].neighborhood : '',
+    addressType: (addresses[0]?.addressType ?? 'individual') as AddressType,
     address: addresses[0]?.address ?? '',
     note: '',
   });
@@ -65,7 +67,12 @@ export default function CheckoutPage({
   const chooseAddress = (address: Address) => {
     setSelectedAddress(address.id);
     setAddressTitle(address.title);
-    setDelivery((current) => ({ ...current, ...address, postalCode: address.postalCode ?? '' }));
+    setDelivery((current) => ({
+      ...current,
+      ...address,
+      neighborhood: address.neighborhood,
+      addressType: address.addressType ?? 'individual',
+    }));
     setEditingAddress(false);
     setError('');
   };
@@ -269,7 +276,8 @@ export default function CheckoutPage({
               phone: delivery.phone,
               city: delivery.city,
               district: delivery.district,
-              postalCode: delivery.postalCode,
+              neighborhood: delivery.neighborhood,
+              addressType: delivery.addressType,
               address: delivery.address,
             };
             const id = onComplete({
@@ -289,7 +297,8 @@ export default function CheckoutPage({
                 phone: '',
                 city: '',
                 district: '',
-                postalCode: '',
+                neighborhood: '',
+                addressType: 'individual',
                 address: '',
                 note: '',
               });
@@ -428,13 +437,18 @@ export default function CheckoutPage({
                         onChange={() => chooseAddress(address)}
                       />
                       <span>
-                        <strong>{address.title}</strong>
+                        <strong>
+                          {address.title} ·{' '}
+                          {address.addressType === 'corporate' ? 'Kurumsal' : 'Bireysel'}
+                        </strong>
                         <span>
                           {address.name} · {phoneText(address.phone)}
                         </span>
-                        <span>{address.address}</span>
                         <span>
-                          {address.district} / {address.city} {address.postalCode}
+                          {[address.neighborhood, address.address].filter(Boolean).join(', ')}
+                        </span>
+                        <span>
+                          {address.district} / {address.city}
                         </span>
                       </span>
                     </label>
@@ -464,7 +478,8 @@ export default function CheckoutPage({
                       phone: '',
                       city: '',
                       district: '',
-                      postalCode: '',
+                      neighborhood: '',
+                      addressType: 'individual',
                       address: '',
                       note: '',
                     });
@@ -476,6 +491,10 @@ export default function CheckoutPage({
               )}
               {editingAddress && (
                 <div ref={addressEditor} className="account-form account-form-grid">
+                  <AddressTypeSelector
+                    value={delivery.addressType}
+                    onChange={(addressType) => setDelivery({ ...delivery, addressType })}
+                  />
                   <label className="account-wide">
                     Adres başlığı
                     <input
@@ -512,26 +531,9 @@ export default function CheckoutPage({
                   <LocationFields
                     city={delivery.city}
                     district={delivery.district}
+                    neighborhood={delivery.neighborhood ?? ''}
                     onChange={(location) => setDelivery({ ...delivery, ...location })}
                   />
-                  <label>
-                    Posta kodu
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="postal-code"
-                      pattern="[0-9]{5}"
-                      maxLength={5}
-                      placeholder="54050"
-                      value={delivery.postalCode}
-                      onChange={(event) =>
-                        setDelivery({
-                          ...delivery,
-                          postalCode: event.target.value.replace(/\D/g, ''),
-                        })
-                      }
-                    />
-                  </label>
                   <label className="account-wide">
                     Açık adres
                     <textarea
@@ -539,7 +541,7 @@ export default function CheckoutPage({
                       rows={3}
                       autoComplete="street-address"
                       maxLength={500}
-                      placeholder="Mahalle, sokak, bina ve daire numarası"
+                      placeholder="Sokak, bina ve daire numarası"
                       value={delivery.address}
                       onChange={(e) => setDelivery({ ...delivery, address: e.target.value })}
                     />
@@ -571,7 +573,8 @@ export default function CheckoutPage({
                           phone: delivery.phone.trim(),
                           city: delivery.city.trim(),
                           district: delivery.district.trim(),
-                          postalCode: delivery.postalCode.trim(),
+                          neighborhood: delivery.neighborhood?.trim() ?? '',
+                          addressType: delivery.addressType,
                           address: delivery.address.trim(),
                         };
                         if (!validAddress(entry)) {

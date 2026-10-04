@@ -145,6 +145,7 @@ for (const width of [320, 390, 430, 1440]) {
     await page.getByLabel('Telefon', { exact: true }).fill('05320000000');
     await page.getByRole('combobox', { name: 'İl', exact: true }).selectOption('Sakarya');
     await page.getByRole('combobox', { name: 'İlçe', exact: true }).selectOption('Serdivan');
+    await page.getByRole('combobox', { name: 'Mahalle', exact: true }).selectOption('Kemalpaşa');
     await page.getByLabel('Açık adres', { exact: true }).fill('Test Mahallesi, Test Sokak No: 1');
     await page.getByRole('button', { name: 'Adresi kaydet ve seç' }).click();
     await page.getByRole('radio', { name: 'iyzico', exact: true }).check();

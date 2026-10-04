@@ -6,7 +6,7 @@ async function fillAddress(page: Page, title: string) {
   await page.getByLabel('Telefon', { exact: true }).fill('05320000000');
   await page.getByRole('combobox', { name: 'İl', exact: true }).selectOption('Sakarya');
   await page.getByRole('combobox', { name: 'İlçe', exact: true }).selectOption('Serdivan');
-  await page.getByLabel('Posta kodu', { exact: true }).fill('54050');
+  await page.getByRole('combobox', { name: 'Mahalle', exact: true }).selectOption('Kemalpaşa');
   await page
     .getByRole('textbox', { name: 'Açık adres', exact: true })
     .fill('Test Mahallesi, Test Sokak No: 1');
@@ -32,18 +32,23 @@ for (const width of [390, 1440]) {
     });
     await openPayment(page, width);
     await fillAddress(page, 'Ev');
+    await page.getByRole('radio', { name: 'Kurumsal', exact: true }).check();
     await page.getByRole('button', { name: 'Adresi kaydet ve seç' }).click();
     await page.goto('/adreslerim/');
     const addresses = page.locator('.account-addresses article');
     await expect(addresses).toHaveCount(1);
     await expect(addresses).toContainText('Ev');
-    await expect(addresses).toContainText('54050');
+    await expect(addresses).toContainText('Kemalpaşa');
+    await expect(addresses).toContainText('Kurumsal');
     await expect(addresses).toContainText('+90 532 000 0000');
     await page.reload();
     await expect(addresses).toHaveCount(1);
     await addresses.getByRole('button', { name: 'Düzenle', exact: true }).click();
     await page.getByLabel('Adres başlığı', { exact: true }).fill('Güncel ev');
-    await expect(page.getByLabel('Posta kodu', { exact: true })).toHaveValue('54050');
+    await expect(page.getByRole('combobox', { name: 'Mahalle', exact: true })).toHaveValue(
+      'Kemalpaşa',
+    );
+    await expect(page.getByRole('radio', { name: 'Kurumsal', exact: true })).toBeChecked();
     await page.getByRole('textbox', { name: 'Açık adres', exact: true }).fill('Güncel Sokak No: 2');
     await page.getByRole('button', { name: 'Adresi kaydet', exact: true }).click();
     await page.getByRole('button', { name: 'Yeni adres ekle', exact: true }).click();
@@ -55,7 +60,9 @@ for (const width of [390, 1440]) {
     await expect(options).toHaveCount(2);
     const home = options.filter({ hasText: 'Güncel ev' });
     await expect(home).toContainText('Güncel Sokak No: 2');
-    await expect(home).toContainText('54050');
+    await expect(home).toContainText('Kemalpaşa');
+    await expect(home).toContainText('Kurumsal');
+    await expect(options.filter({ hasText: 'İş' })).toContainText('Bireysel');
     await expect(home.getByRole('radio')).toBeChecked();
     await expect(page.getByLabel('Adres başlığı', { exact: true })).toHaveCount(0);
     await page.getByRole('radio', { name: 'iyzico', exact: true }).check();
@@ -65,7 +72,10 @@ for (const width of [390, 1440]) {
     const order = await page.evaluate(
       () => JSON.parse(sessionStorage.getItem('mosso-demo-orders-v1') || '[]')[0],
     );
-    expect(order.deliveryAddress.postalCode).toBe('54050');
+    expect(order.deliveryAddress.neighborhood).toBe('Kemalpaşa');
+    expect(order.deliveryAddress.addressType).toBe('corporate');
+    expect(order.deliveryAddress.postalCode).toBeUndefined();
+    expect(order.billingAddress).toContain('Kemalpaşa');
     expect(order.deliveryAddress.phone).toBe('05320000000');
     await page.goto('/?urun=basic-crop');
     await page.getByRole('button', { name: 'M', exact: true }).click();
@@ -151,3 +161,42 @@ for (const width of [390, 1440]) {
     await expect(page.getByRole('switch', { name: 'SMS bildirimleri' })).toBeChecked();
   });
 }
+
+test('location changes clear stale neighborhoods and failed lists can be retried', async ({
+  page,
+}) => {
+  await page.addInitScript(() => sessionStorage.setItem('mosso-demo-session', 'preview'));
+  await page.goto('/adreslerim/');
+  await page.getByRole('button', { name: 'Yeni adres ekle', exact: true }).click();
+  await expect(page.getByRole('radio', { name: 'Bireysel', exact: true })).toBeChecked();
+  await fillAddress(page, 'Ev');
+  const city = page.getByRole('combobox', { name: 'İl', exact: true });
+  const district = page.getByRole('combobox', { name: 'İlçe', exact: true });
+  const neighborhood = page.getByRole('combobox', { name: 'Mahalle', exact: true });
+  await district.selectOption('Adapazarı');
+  await expect(neighborhood).toHaveValue('');
+  await neighborhood.selectOption({ label: 'Abalı' });
+  await page.route('**/data/neighborhoods/42.json', (route) =>
+    route.fulfill({ status: 503, body: '' }),
+  );
+  await city.selectOption('Konya');
+  await expect(district).toHaveValue('');
+  await expect(neighborhood).toHaveValue('');
+  await district.selectOption('Ereğli');
+  await expect(neighborhood).toBeDisabled();
+  await expect(page.getByRole('alert').filter({ hasText: 'Mahalle listesi' })).toContainText(
+    'Mahalle listesi yüklenemedi',
+  );
+  await page.unroute('**/data/neighborhoods/42.json');
+  await page.getByRole('button', { name: 'Tekrar dene', exact: true }).click();
+  await expect(neighborhood).toBeEnabled();
+  await neighborhood.selectOption({ index: 1 });
+  const selected = await neighborhood.inputValue();
+  await page.getByRole('button', { name: 'Adresi kaydet', exact: true }).click();
+  await expect(page.locator('.account-addresses article')).toContainText(selected);
+  await page.goto('/');
+  await page.setViewportSize({ width: 390, height: 800 });
+  await expect(page.locator('.brand-story')).toBeHidden();
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await expect(page.locator('.brand-story')).toBeVisible();
+});

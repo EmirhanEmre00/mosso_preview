@@ -2414,6 +2414,7 @@ summary::-webkit-details-marker {
   }
   .brand-story {
     margin-top: 29.5px;
+    display: none;
     margin-bottom: 29.5px;
     padding: 23px;
     gap: 10px;

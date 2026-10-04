@@ -15,7 +15,8 @@ export type OrderAddress = {
   phone: string;
   city: string;
   district: string;
-  postalCode?: string;
+  neighborhood?: string;
+  addressType?: 'individual' | 'corporate';
   address: string;
 };
 export type CheckoutSelection = {
@@ -66,8 +67,11 @@ export function snapshotAddress(value: unknown): OrderAddress | undefined {
     phone: bounded(source.phone, 30),
     city: bounded(source.city, 100),
     district: bounded(source.district, 100),
-    ...(typeof source.postalCode === 'string' && /^\d{5}$/.test(source.postalCode)
-      ? { postalCode: source.postalCode }
+    ...(typeof source.neighborhood === 'string'
+      ? { neighborhood: bounded(source.neighborhood, 150) }
+      : {}),
+    ...(source.addressType === 'individual' || source.addressType === 'corporate'
+      ? { addressType: source.addressType }
       : {}),
     address: bounded(source.address, 500),
   };
@@ -76,10 +80,9 @@ export function addressText(address?: OrderAddress) {
   return address
     ? [
         address.name,
+        address.neighborhood,
         address.address,
-        [[address.district, address.city].filter(Boolean).join(' / '), address.postalCode]
-          .filter(Boolean)
-          .join(' '),
+        [address.district, address.city].filter(Boolean).join(' / '),
       ]
         .filter(Boolean)
         .join('\n')
@@ -121,8 +124,9 @@ const exampleAddress: OrderAddress = {
   phone: '551*****34',
   city: 'Sakarya',
   district: 'Serdivan',
-  address:
-    'Kemalpaşa Mahallesi, Üniversite Caddesi, No: 39A\nKat: 2, Daire: 9B\nİmren House karşısı, renkli bina',
+  neighborhood: 'Kemalpaşa',
+  addressType: 'individual',
+  address: 'Üniversite Caddesi, No: 39A\nKat: 2, Daire: 9B\nİmren House karşısı, renkli bina',
 };
 export function refreshExampleOrder(order: DemoOrder): DemoOrder {
   if (!order.example || !/^DEMO-[1-4]ABC$/.test(order.id)) return order;
