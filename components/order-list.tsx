@@ -16,6 +16,7 @@ import {
 import { products, money } from '@/lib/products';
 import { previewTotals } from '@/lib/checkout-pricing.mjs';
 import { sitePath } from '@/lib/site-path';
+import { phoneText } from '@/lib/contact-validation.mjs';
 import {
   addressText,
   refreshExampleOrder,
@@ -326,7 +327,7 @@ export default function OrderList({
                 <address className="order-address">
                   {addressText(detail.deliveryAddress) || 'Teslimat adresi bulunmuyor.'}
                 </address>
-                {detail.deliveryAddress?.phone && <p>{detail.deliveryAddress.phone}</p>}
+                {detail.deliveryAddress?.phone && <p>{phoneText(detail.deliveryAddress.phone)}</p>}
                 <small>Sipariş oluşturulurken seçilen adres.</small>
               </section>
               <section>

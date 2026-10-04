@@ -22,7 +22,7 @@ import PaymentMethods from './payment-methods';
 import type { Address } from './account-panel';
 import PhoneInput from './phone-input';
 import LocationFields from './location-fields';
-import { validAddress } from '@/lib/contact-validation.mjs';
+import { validAddress, phoneText } from '@/lib/contact-validation.mjs';
 import './checkout-mobile.css';
 import { sitePath } from '@/lib/site-path';
 export default function CheckoutPage({
@@ -54,6 +54,7 @@ export default function CheckoutPage({
     phone: addresses[0]?.phone ?? '',
     city: addresses[0]?.city ?? '',
     district: addresses[0]?.district ?? '',
+    postalCode: addresses[0]?.postalCode ?? '',
     address: addresses[0]?.address ?? '',
     note: '',
   });
@@ -64,7 +65,7 @@ export default function CheckoutPage({
   const chooseAddress = (address: Address) => {
     setSelectedAddress(address.id);
     setAddressTitle(address.title);
-    setDelivery((current) => ({ ...current, ...address }));
+    setDelivery((current) => ({ ...current, ...address, postalCode: address.postalCode ?? '' }));
     setEditingAddress(false);
     setError('');
   };
@@ -268,6 +269,7 @@ export default function CheckoutPage({
               phone: delivery.phone,
               city: delivery.city,
               district: delivery.district,
+              postalCode: delivery.postalCode,
               address: delivery.address,
             };
             const id = onComplete({
@@ -287,6 +289,7 @@ export default function CheckoutPage({
                 phone: '',
                 city: '',
                 district: '',
+                postalCode: '',
                 address: '',
                 note: '',
               });
@@ -427,11 +430,11 @@ export default function CheckoutPage({
                       <span>
                         <strong>{address.title}</strong>
                         <span>
-                          {address.name} · {address.phone}
+                          {address.name} · {phoneText(address.phone)}
                         </span>
                         <span>{address.address}</span>
                         <span>
-                          {address.district} / {address.city}
+                          {address.district} / {address.city} {address.postalCode}
                         </span>
                       </span>
                     </label>
@@ -461,6 +464,7 @@ export default function CheckoutPage({
                       phone: '',
                       city: '',
                       district: '',
+                      postalCode: '',
                       address: '',
                       note: '',
                     });
@@ -510,6 +514,24 @@ export default function CheckoutPage({
                     district={delivery.district}
                     onChange={(location) => setDelivery({ ...delivery, ...location })}
                   />
+                  <label>
+                    Posta kodu
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="postal-code"
+                      pattern="[0-9]{5}"
+                      maxLength={5}
+                      placeholder="54050"
+                      value={delivery.postalCode}
+                      onChange={(event) =>
+                        setDelivery({
+                          ...delivery,
+                          postalCode: event.target.value.replace(/\D/g, ''),
+                        })
+                      }
+                    />
+                  </label>
                   <label className="account-wide">
                     Açık adres
                     <textarea
@@ -549,6 +571,7 @@ export default function CheckoutPage({
                           phone: delivery.phone.trim(),
                           city: delivery.city.trim(),
                           district: delivery.district.trim(),
+                          postalCode: delivery.postalCode.trim(),
                           address: delivery.address.trim(),
                         };
                         if (!validAddress(entry)) {

@@ -3121,6 +3121,28 @@ summary::-webkit-details-marker {
 .account-form textarea {
   resize: vertical;
 }
+.phone-field {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #dcd4e0;
+  border-radius: 7px;
+  background: white;
+}
+.phone-country {
+  flex: none;
+  padding-left: 12px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.phone-field > input:not([type='hidden']) {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+}
 .account-form input:focus-visible,
 .account-form select:focus-visible,
 .account-form textarea:focus-visible {

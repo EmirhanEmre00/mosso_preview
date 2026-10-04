@@ -6,6 +6,7 @@ async function fillAddress(page: Page, title: string) {
   await page.getByLabel('Telefon', { exact: true }).fill('05320000000');
   await page.getByRole('combobox', { name: 'İl', exact: true }).selectOption('Sakarya');
   await page.getByRole('combobox', { name: 'İlçe', exact: true }).selectOption('Serdivan');
+  await page.getByLabel('Posta kodu', { exact: true }).fill('54050');
   await page
     .getByRole('textbox', { name: 'Açık adres', exact: true })
     .fill('Test Mahallesi, Test Sokak No: 1');
@@ -36,10 +37,13 @@ for (const width of [390, 1440]) {
     const addresses = page.locator('.account-addresses article');
     await expect(addresses).toHaveCount(1);
     await expect(addresses).toContainText('Ev');
+    await expect(addresses).toContainText('54050');
+    await expect(addresses).toContainText('+90 532 000 0000');
     await page.reload();
     await expect(addresses).toHaveCount(1);
     await addresses.getByRole('button', { name: 'Düzenle', exact: true }).click();
     await page.getByLabel('Adres başlığı', { exact: true }).fill('Güncel ev');
+    await expect(page.getByLabel('Posta kodu', { exact: true })).toHaveValue('54050');
     await page.getByRole('textbox', { name: 'Açık adres', exact: true }).fill('Güncel Sokak No: 2');
     await page.getByRole('button', { name: 'Adresi kaydet', exact: true }).click();
     await page.getByRole('button', { name: 'Yeni adres ekle', exact: true }).click();
@@ -51,12 +55,18 @@ for (const width of [390, 1440]) {
     await expect(options).toHaveCount(2);
     const home = options.filter({ hasText: 'Güncel ev' });
     await expect(home).toContainText('Güncel Sokak No: 2');
+    await expect(home).toContainText('54050');
     await expect(home.getByRole('radio')).toBeChecked();
     await expect(page.getByLabel('Adres başlığı', { exact: true })).toHaveCount(0);
     await page.getByRole('radio', { name: 'iyzico', exact: true }).check();
     await page.locator('#checkout-agreement').check();
     await page.getByRole('button', { name: 'Ödeme yap', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Siparişiniz alındı.' })).toBeVisible();
+    const order = await page.evaluate(
+      () => JSON.parse(sessionStorage.getItem('mosso-demo-orders-v1') || '[]')[0],
+    );
+    expect(order.deliveryAddress.postalCode).toBe('54050');
+    expect(order.deliveryAddress.phone).toBe('05320000000');
     await page.goto('/?urun=basic-crop');
     await page.getByRole('button', { name: 'M', exact: true }).click();
     await page.getByRole('button', { name: 'Sepete ekle', exact: true }).click();
@@ -86,7 +96,16 @@ for (const width of [390, 1440]) {
     await page.getByLabel('Ad', { exact: true }).fill('Test');
     await page.getByLabel('Soyad', { exact: true }).fill('Müşteri');
     await page.getByLabel('E-posta', { exact: true }).fill('test@example.com');
-    await page.getByLabel('Telefon', { exact: true }).fill('05320000000');
+    const phone = page.getByLabel('Telefon', { exact: true });
+    await phone.fill('+90 532 324 4356');
+    await expect(phone).toHaveValue('532 324 4356');
+    await expect(phone.locator('..').locator('.phone-country')).toHaveText('+90');
+    await phone.evaluate((input) => (input as HTMLInputElement).setSelectionRange(4, 4));
+    await phone.press('Backspace');
+    await expect(phone).toHaveValue('533 244 356');
+    await phone.fill('');
+    await phone.pressSequentially('5320000000');
+    await expect(phone).toHaveValue('532 000 0000');
     await page.getByLabel('Doğum tarihi').fill('2000-01-02');
     await page.getByRole('radio', { name: 'Belirtmek istemiyorum' }).check();
     await page.getByRole('button', { name: 'Bilgileri kaydet' }).click();
@@ -102,7 +121,7 @@ for (const width of [390, 1440]) {
     await expect(page.getByLabel('Ad', { exact: true })).toHaveValue('Test');
     await expect(page.getByLabel('Soyad', { exact: true })).toHaveValue('Müşteri');
     await expect(page.getByLabel('E-posta', { exact: true })).toHaveValue('test@example.com');
-    await expect(page.getByLabel('Telefon', { exact: true })).toHaveValue('05320000000');
+    await expect(page.getByLabel('Telefon', { exact: true })).toHaveValue('532 000 0000');
     await expect(page.getByLabel('Doğum tarihi')).toHaveValue('2000-01-02');
     await expect(page.getByRole('radio', { name: 'Belirtmek istemiyorum' })).toBeChecked();
     await expect(page.getByRole('switch', { name: 'SMS bildirimleri' })).not.toBeChecked();
@@ -113,7 +132,12 @@ for (const width of [390, 1440]) {
     const support = page.getByRole('dialog', { name: 'Nasıl yardımcı olalım?' });
     await expect(support.getByLabel('Ad soyad')).toHaveValue('Test Müşteri');
     await expect(support.getByLabel('E-posta')).toHaveValue('test@example.com');
-    await expect(support.getByLabel('Telefon')).toHaveValue('05320000000');
+    await expect(support.getByLabel('Telefon')).toHaveValue('532 000 0000');
+    expect(
+      await support
+        .locator('form')
+        .evaluate((form) => new FormData(form as HTMLFormElement).get('phone')),
+    ).toBe('05320000000');
     await page.getByRole('button', { name: 'Destek penceresini kapat' }).click();
     await page.locator('.profile-menu > button').click();
     await page.getByRole('button', { name: 'Çıkış yap', exact: true }).click();

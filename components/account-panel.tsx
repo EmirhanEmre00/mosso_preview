@@ -10,7 +10,7 @@ import SocialLoginButtons from './social-login-buttons';
 import type { SupportContact } from './support-widget';
 import PhoneInput from './phone-input';
 import LocationFields from './location-fields';
-import { validAddress } from '@/lib/contact-validation.mjs';
+import { validAddress, phoneText } from '@/lib/contact-validation.mjs';
 
 const sections = ['Giriş yap / Kayıt ol', 'Hesabım', 'Siparişlerim', 'Adreslerim'] as const;
 export type AccountSection = (typeof sections)[number];
@@ -21,9 +21,18 @@ export type Address = {
   phone: string;
   city: string;
   district: string;
+  postalCode?: string;
   address: string;
 };
-const blankAddress = { title: '', name: '', phone: '', city: '', district: '', address: '' };
+const blankAddress = {
+  title: '',
+  name: '',
+  phone: '',
+  city: '',
+  district: '',
+  postalCode: '',
+  address: '',
+};
 
 export default function AccountPanel({
   section,
@@ -257,14 +266,14 @@ export default function AccountPanel({
                       <br />
                       {address.address}
                       <br />
-                      {address.district} / {address.city}
+                      {address.district} / {address.city} {address.postalCode}
                       <br />
-                      {address.phone}
+                      {phoneText(address.phone)}
                     </p>
                     <div>
                       <button
                         onClick={() => {
-                          setDraft(address);
+                          setDraft({ ...address, postalCode: address.postalCode ?? '' });
                           setEditing(address.id);
                           setMessage('');
                         }}
@@ -348,6 +357,21 @@ export default function AccountPanel({
                     district={draft.district}
                     onChange={(location) => setDraft({ ...draft, ...location })}
                   />
+                  <label>
+                    Posta kodu
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="postal-code"
+                      pattern="[0-9]{5}"
+                      maxLength={5}
+                      placeholder="54050"
+                      value={draft.postalCode}
+                      onChange={(event) =>
+                        setDraft({ ...draft, postalCode: event.target.value.replace(/\D/g, '') })
+                      }
+                    />
+                  </label>
                   <label className="account-wide">
                     Açık adres
                     <textarea

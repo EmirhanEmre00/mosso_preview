@@ -15,6 +15,7 @@ export type OrderAddress = {
   phone: string;
   city: string;
   district: string;
+  postalCode?: string;
   address: string;
 };
 export type CheckoutSelection = {
@@ -65,12 +66,21 @@ export function snapshotAddress(value: unknown): OrderAddress | undefined {
     phone: bounded(source.phone, 30),
     city: bounded(source.city, 100),
     district: bounded(source.district, 100),
+    ...(typeof source.postalCode === 'string' && /^\d{5}$/.test(source.postalCode)
+      ? { postalCode: source.postalCode }
+      : {}),
     address: bounded(source.address, 500),
   };
 }
 export function addressText(address?: OrderAddress) {
   return address
-    ? [address.name, address.address, [address.district, address.city].filter(Boolean).join(' / ')]
+    ? [
+        address.name,
+        address.address,
+        [[address.district, address.city].filter(Boolean).join(' / '), address.postalCode]
+          .filter(Boolean)
+          .join(' '),
+      ]
         .filter(Boolean)
         .join('\n')
     : '';

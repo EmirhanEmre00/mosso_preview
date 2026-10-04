@@ -5,6 +5,9 @@ import {
   districtsFor,
   validLocation,
   phoneInput,
+  phoneDisplay,
+  phoneText,
+  validPostalCode,
   validPhone,
   validAddress,
 } from '../lib/contact-validation.mjs';
@@ -22,6 +25,20 @@ test('81 il ve ilçelerinin ilişkisi, aynı adlı ilçeler dahil korunur', () =
   assert.equal(validLocation('Konya', 'Ereğli'), true);
   assert.equal(validLocation('Zonguldak', 'Ereğli'), true);
   assert.equal(validLocation('', ''), false);
+});
+test('phone display groups 3-3-4 digits without changing saved national numbers', () => {
+  for (const value of ['05323244356', '+90 532 324 4356', '5323244356']) {
+    assert.equal(phoneDisplay(value), '532 324 4356');
+  }
+  assert.equal(phoneDisplay(''), '');
+  assert.equal(phoneDisplay('05323'), '532 3');
+  assert.equal(phoneText('05323244356'), '+90 532 324 4356');
+  assert.equal(phoneText('551*****34'), '551*****34');
+});
+test('postal codes accept exactly five digits and remain optional for existing addresses', () => {
+  for (const value of [undefined, '', '54050']) assert.equal(validPostalCode(value), true);
+  for (const value of ['5405', '540500', '54abc', null, 54050])
+    assert.equal(validPostalCode(value), false);
 });
 test('telefon biçimleri yerel numaraya dönüşür, uzun ve hatalı numara geçmez', () => {
   for (const input of ['+90 (532) 123 45 67', '00905321234567', '5321234567', '05321234567']) {

@@ -33,6 +33,12 @@ test('session addresses reject damaged entries and duplicate identifiers', () =>
     [address],
   );
 });
+test('postal code persists and malformed postal codes cannot enter the address book', () => {
+  assert.deepEqual(validateAddresses([{ ...address, postalCode: '54050' }]), [
+    { ...address, postalCode: '54050' },
+  ]);
+  assert.deepEqual(validateAddresses([{ ...address, postalCode: '54abc' }]), []);
+});
 
 test('session account preserves all personal fields and explicit preference choices', () => {
   const account = {
