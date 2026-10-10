@@ -409,10 +409,15 @@ export default function Storefront({
       <motion.article
         className="product-card"
         key={product.id}
-        initial={{ opacity: 0, y: 14 }}
+        initial={{ opacity: 0, y: 8 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ delay: (index % 4) * 0.045, duration: 0.3 }}
+        transition={{
+          type: 'tween',
+          delay: (index % 4) * 0.07,
+          duration: 0.65,
+          ease: [0.22, 1, 0.36, 1],
+        }}
       >
         <div className="product-photo">
           <button
@@ -427,8 +432,9 @@ export default function Storefront({
           )}
           <motion.button
             className={`favorite ${favorites.includes(product.id) ? 'selected' : ''}`}
-            whileTap={{ scale: 0.82 }}
-            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.96 }}
+            whileHover={{ scale: 1.03 }}
+            transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
             aria-label={`${product.name} ${favorites.includes(product.id) ? 'favorilerden çıkar' : 'favorilere ekle'}`}
             aria-pressed={favorites.includes(product.id)}
             onClick={() => toggleFavorite(product.id)}
@@ -734,11 +740,15 @@ export default function Storefront({
                   key={story.image}
                   className="street-editorial"
                   onClick={() => navigate('collection', story.category)}
-                  initial={{ opacity: 0, y: 24 }}
+                  initial={{ opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.15 }}
-                  transition={{ duration: 0.6, delay: index * 0.08 }}
-                  whileTap={{ scale: 0.99 }}
+                  transition={{
+                    type: 'tween',
+                    duration: 0.8,
+                    delay: index * 0.08,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
                 >
                   <div className="street-editorial-photo">
                     <img
@@ -781,11 +791,14 @@ export default function Storefront({
                   <motion.button
                     className="category-card"
                     key={c.name}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 12 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.15 }}
-                    transition={{ duration: 0.5 }}
-                    whileTap={{ scale: 0.985 }}
+                    transition={{
+                      type: 'tween',
+                      duration: 0.7,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
                     onClick={() => navigate('collection', c.name)}
                   >
                     <img src={sitePath(c.image)} alt={c.name} loading="lazy" />
