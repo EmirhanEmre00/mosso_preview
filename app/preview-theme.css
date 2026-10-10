@@ -265,19 +265,10 @@
 .product-photo {
   border-radius: 0;
 }
-.category-card,
 .street-editorial {
   transition:
     color 200ms,
     background 200ms;
-}
-.category-card > img {
-  transition: transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-.product-card .favorite {
-  transition:
-    color 180ms,
-    background 180ms;
 }
 .section-heading h2 {
   font-weight: 500;
@@ -492,16 +483,13 @@
     animation: none;
   }
   .street-editorial-photo img,
-  .category-card > img,
-  .product-photo img,
   .primary svg,
   .text-link svg,
   .editorial-link svg,
   .nav-inner button::after {
     transition: none;
   }
-  .street-editorial:hover img,
-  .product-photo:hover img {
+  .street-editorial:hover img {
     transform: none;
   }
 }

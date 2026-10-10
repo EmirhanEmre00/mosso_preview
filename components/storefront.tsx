@@ -409,15 +409,10 @@ export default function Storefront({
       <motion.article
         className="product-card"
         key={product.id}
-        initial={{ opacity: 0, y: 8 }}
+        initial={{ opacity: 0, y: 14 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{
-          type: 'tween',
-          delay: (index % 4) * 0.07,
-          duration: 0.65,
-          ease: [0.22, 1, 0.36, 1],
-        }}
+        transition={{ delay: (index % 4) * 0.045, duration: 0.3 }}
       >
         <div className="product-photo">
           <button
@@ -430,17 +425,14 @@ export default function Storefront({
           {product.tag && (
             <span className={`tag ${product.oldPrice ? 'sale' : ''}`}>{product.tag}</span>
           )}
-          <motion.button
+          <button
             className={`favorite ${favorites.includes(product.id) ? 'selected' : ''}`}
-            whileTap={{ scale: 0.96 }}
-            whileHover={{ scale: 1.03 }}
-            transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
             aria-label={`${product.name} ${favorites.includes(product.id) ? 'favorilerden çıkar' : 'favorilere ekle'}`}
             aria-pressed={favorites.includes(product.id)}
             onClick={() => toggleFavorite(product.id)}
           >
             <Heart size={19} fill={favorites.includes(product.id) ? 'currentColor' : 'none'} />
-          </motion.button>
+          </button>
           <button className="quick-view" onClick={() => navigate('product', 'Tümü', product)}>
             Ürünü incele <ArrowUpRight size={17} />
           </button>
@@ -788,17 +780,9 @@ export default function Storefront({
                   { name: 'Elbise', image: '/images/elbise.webp', sub: 'Tek parça, çok sen.' },
                   { name: 'Alt Giyim', image: '/images/denim.webp', sub: 'Her kombinin favorisi.' },
                 ].map((c) => (
-                  <motion.button
+                  <button
                     className="category-card"
                     key={c.name}
-                    initial={{ opacity: 0, y: 12 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.15 }}
-                    transition={{
-                      type: 'tween',
-                      duration: 0.7,
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
                     onClick={() => navigate('collection', c.name)}
                   >
                     <img src={sitePath(c.image)} alt={c.name} loading="lazy" />
@@ -811,7 +795,7 @@ export default function Storefront({
                         <ArrowUpRight size={21} />
                       </span>
                     </span>
-                  </motion.button>
+                  </button>
                 ))}
               </div>
             </section>
