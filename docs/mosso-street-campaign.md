@@ -9,7 +9,7 @@ Kaydedilen dosyalar:
 - public/images/mosso-stone-knit.webp
 - public/images/mosso-coast-shirt.webp
 
-Palet: beyaz, #111 siyah ve vurgu olarak #4c1d95 mor. Mevcut alışveriş, hesap, adres ve sipariş akışları korunur. Hareket azaltma tercihi desteklenir.
+Palet: beyaz, #111 siyah ve vurgu olarak #421177 mor. Mevcut alışveriş, hesap, adres ve sipariş akışları korunur. Hareket azaltma tercihi desteklenir.
 
 +## streetDesktop
 
