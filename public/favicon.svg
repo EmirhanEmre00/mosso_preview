@@ -1,4 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect x=".5" y=".5" width="63" height="63" rx="8" fill="#fff" stroke="#000" stroke-width="1" />
-  <text x="32" y="44" text-anchor="middle" font-family="Georgia,serif" font-size="32" font-style="italic" letter-spacing="-1" fill="#000">m’s</text>
+  <rect x=".5" y=".5" width="63" height="63" fill="#fff" stroke="#000" stroke-width="1" />
+  <g fill="#000">
+    <text x="6" y="44" font-family="Georgia,serif" font-size="31">m</text>
+    <path d="M38 15h5l-4 10h-4z" />
+    <text x="42" y="44" font-family="Georgia,serif" font-size="31">s</text>
+  </g>
 </svg>
