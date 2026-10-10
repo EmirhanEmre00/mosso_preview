@@ -412,7 +412,7 @@ export default function Storefront({
         initial={{ opacity: 0, y: 14 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ delay: (index % 4) * 0.045, duration: 0.3 }}
+        transition={{ delay: (index % 4) * 0.09, duration: 0.6 }}
       >
         <div className="product-photo">
           <button
