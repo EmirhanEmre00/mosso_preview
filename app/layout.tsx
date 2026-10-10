@@ -2,6 +2,7 @@ import { sitePath } from '@/lib/site-path';
 import type { Metadata } from 'next';
 import FocusBehavior from '@/components/focus-behavior';
 import './globals.css';
+import './preview-theme.css';
 export const metadata: Metadata = {
   title: "mos’so — Modern Original Style ' Stand Out",
   description: 'mos’so kadın giyim koleksiyonu. Günlük stilinden özel anlarına, kendin gibi giyin.',

@@ -15,7 +15,7 @@
   --ink: #27232b;
   --muted: #78717c;
   --line: #ece8ed;
-  --lilac: #f5eff7;
+  --lilac: #f7f7f7;
   --font: 'DM Sans', Arial, sans-serif;
 }
 * {
@@ -532,7 +532,7 @@ h2 {
 }
 .tag.sale {
   color: var(--purple);
-  background: #f5eaf9;
+  background: #f7f7f7;
 }
 .favorite {
   position: absolute;
@@ -641,7 +641,7 @@ h2 {
   margin-bottom: 13px;
 }
 footer {
-  background: #faf9fb;
+  background: #f7f7f7;
   border-top: 1px solid var(--line);
 }
 .footer-main {
@@ -1727,7 +1727,7 @@ summary::-webkit-details-marker {
 }
 .lesson-exercise {
   padding: 22px;
-  background: #f7f5f8;
+  background: #f7f7f7;
   border-radius: 3px;
   margin-top: 25px;
 }
@@ -2052,7 +2052,7 @@ summary::-webkit-details-marker {
 .price-presets button {
   font-size: 11px;
   padding: 10px;
-  background: #f7f5f8;
+  background: #f7f7f7;
   border-radius: 3px;
   min-height: 36px;
 }
@@ -3052,7 +3052,7 @@ summary::-webkit-details-marker {
   font-size: 13px;
   padding: 10px 13px;
   border-radius: 7px;
-  background: #f7f4f8;
+  background: #f7f7f7;
 }
 .account-nav button[aria-current] {
   color: white;
@@ -3063,7 +3063,7 @@ summary::-webkit-details-marker {
   line-height: 1.6;
   color: var(--muted);
   padding: 12px 14px;
-  background: #faf8fb;
+  background: #f7f7f7;
   border: 1px solid var(--line);
   border-radius: 8px;
 }
@@ -3458,7 +3458,7 @@ summary::-webkit-details-marker {
 }
 .account-feedback {
   padding: 12px 15px;
-  background: #f1eaf5;
+  background: #f7f7f7;
   border-radius: 8px;
   color: var(--purple-dark);
   font-size: 13px;
@@ -3553,7 +3553,7 @@ summary::-webkit-details-marker {
 .profile-panel button:hover,
 .profile-panel button:focus-visible {
   color: var(--purple);
-  background: #f3eaf7;
+  background: #f7f7f7;
 }
 .profile-panel button:focus-visible {
   outline: 2px solid var(--purple);
@@ -3590,7 +3590,7 @@ summary::-webkit-details-marker {
 }
 .account-page .account-nav button:hover:not([aria-current]),
 .account-auth-tabs button:hover {
-  background: #f3eaf7;
+  background: #f7f7f7;
   color: var(--purple);
 }
 .account-page button:focus-visible {
@@ -3941,7 +3941,7 @@ summary::-webkit-details-marker {
   transform: rotate(180deg);
 }
 .checkout-security > div {
-  background: #faf8fb;
+  background: #f7f7f7;
   padding: 14px;
   line-height: 1.7;
 }
@@ -4360,7 +4360,7 @@ summary::-webkit-details-marker {
 .order-status {
   padding: 8px 12px;
   color: var(--purple);
-  background: #f5eff7;
+  background: #f7f7f7;
   font-size: 12px;
 }
 .order-entry summary {
@@ -4585,7 +4585,7 @@ summary::-webkit-details-marker {
   transition: background-color 0.18s ease;
 }
 .order-entry-link:hover {
-  background: #faf7fb;
+  background: #f7f7f7;
 }
 .order-entry-link:focus-visible {
   outline: 2px solid var(--purple);
@@ -4673,7 +4673,7 @@ summary::-webkit-details-marker {
 }
 .document-disabled {
   color: var(--muted);
-  background: #f6f4f7;
+  background: #f7f7f7;
   padding: 12px;
   cursor: not-allowed;
 }
@@ -4914,7 +4914,7 @@ summary::-webkit-details-marker {
   }
   .account-form select:disabled {
     color: var(--muted);
-    background: #faf8fb;
+    background: #f7f7f7;
     opacity: 1;
   }
   .account-form .account-form-actions {
@@ -5159,49 +5159,3 @@ summary::-webkit-details-marker {
 }
 
 /* Preview campaign: a full photographic hero with readable copy. */
-.hero-city-campaign {
-  background: #262127;
-}
-.hero-city-campaign h1,
-.hero-city-campaign .hero-description {
-  color: #fffaf5;
-}
-.hero-city-campaign h1 em,
-.hero-city-campaign .eyebrow {
-  color: #efd6f2;
-}
-.hero-city-campaign .hero-index,
-.hero-city-campaign .hero-index span {
-  color: #fffaf5;
-}
-@media (max-width: 760px) {
-  .hero-city-campaign .hero-copy {
-    inset: 0;
-    height: 100%;
-    padding: 20px;
-  }
-  .hero-city-campaign .hero-copy > div {
-    position: relative;
-    height: 100%;
-  }
-  .hero-city-campaign .hero-copy .eyebrow {
-    margin: 0 0 8px;
-  }
-  .hero-city-campaign h1 {
-    font-size: clamp(28px, 8vw, 36px);
-    line-height: 1.08;
-    letter-spacing: -1px;
-    margin: 0;
-    text-shadow: 0 2px 12px #0007;
-  }
-  .hero-city-campaign .hero-description,
-  .hero-city-campaign .hero-caption {
-    display: none;
-  }
-  .hero-city-campaign .hero-copy .primary {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    box-shadow: 0 4px 20px #0003;
-  }
-}

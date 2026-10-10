@@ -128,7 +128,7 @@
     grid-template-rows: auto auto auto auto 1fr;
     column-gap: 12px;
     row-gap: 6px;
-    background: #faf8fb;
+    background: #f7f7f7;
     border: 1px solid var(--line);
     padding: 12px;
     margin-bottom: 10px;
@@ -220,7 +220,7 @@
   .mobile-cart-coupon {
     padding: 12px;
     border: 1px solid var(--line);
-    background: #faf8fb;
+    background: #f7f7f7;
   }
   #mobile-cart-coupon-fields > label {
     display: flex;
@@ -246,7 +246,7 @@
     flex-direction: column;
     flex: 1;
     padding: 18px 12px 4px;
-    background: #faf8fb;
+    background: #f7f7f7;
     min-width: 0;
     overflow: hidden;
   }
@@ -489,7 +489,7 @@
     margin-top: 16px;
     padding: 12px;
     gap: 10px;
-    background: #faf8fb;
+    background: #f7f7f7;
     border: 1px solid var(--line);
   }
   .checkout-page .checkout-service > svg {
@@ -615,11 +615,11 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .checkout-page .payment-method-options label {
-    background: #faf8fb;
+    background: #f7f7f7;
   }
   .checkout-page .checkout-address-option {
     padding: 12px;
-    background: #faf8fb;
+    background: #f7f7f7;
     border: 1px solid var(--line);
   }
   .checkout-page .contract-documents {
@@ -666,7 +666,7 @@
     padding: 12px 16px 14px;
     border-top: 2px solid var(--purple);
     border-bottom: 1px solid var(--line);
-    background: #faf8fb;
+    background: #f7f7f7;
     box-shadow: 0 -8px 24px #3c204714;
   }
   .checkout-summary-heading {

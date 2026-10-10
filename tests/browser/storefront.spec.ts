@@ -103,13 +103,16 @@ test('mobile search and a size filter produce a meaningful empty state', async (
 test('mobile portrait hero and footer preserve access to all content', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 900 });
   await page.goto('/');
+  await page.locator('.hero-photo').evaluate(async (image) => {
+    await Promise.all(image.getAnimations().map((animation) => animation.finished));
+  });
   const hero = await page.locator('.hero').boundingBox();
   const footer = page.getByRole('contentinfo');
   const before = await footer.boundingBox();
   const photo = await page.locator('.hero-photo').boundingBox();
   await expect
     .poll(() => page.locator('.hero-photo').evaluate((image: HTMLImageElement) => image.currentSrc))
-    .toContain('/images/mosso-city-editorial-mobile.webp');
+    .toContain('/images/mosso-street-mobile.webp');
   expect(photo!.height / photo!.width).toBeCloseTo(16 / 9, 2);
   expect(photo!.y).toBeCloseTo(hero!.y, 0);
   await expect
@@ -117,7 +120,7 @@ test('mobile portrait hero and footer preserve access to all content', async ({ 
       const box = await page.locator('.hero h1').boundingBox();
       return box!.y + box!.height;
     })
-    .toBeLessThan(photo!.y + photo!.height * 0.23);
+    .toBeGreaterThan(photo!.y + photo!.height * 0.6);
   expect(photo!.y + photo!.height).toBeCloseTo(hero!.y + hero!.height, 0);
   expect(before!.height).toBeLessThan(380);
   const toggle = footer.getByRole('button', { name: 'Koleksiyonu keşfet' });

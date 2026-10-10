@@ -61,7 +61,7 @@ const REMEMBER_KEY = 'mosso-demo-remember-until';
 type CartRow = { id: string; size: string; color?: string; quantity: number };
 type View = 'home' | 'collection' | 'favorites' | 'product' | 'account' | 'checkout';
 const STORE_KEY = 'mosso-preview-v1';
-const hero = '/images/mosso-city-editorial-desktop.webp';
+const hero = '/images/mosso-street-desktop.webp';
 
 export default function Storefront({
   initialAccount,
@@ -425,14 +425,16 @@ export default function Storefront({
           {product.tag && (
             <span className={`tag ${product.oldPrice ? 'sale' : ''}`}>{product.tag}</span>
           )}
-          <button
+          <motion.button
             className={`favorite ${favorites.includes(product.id) ? 'selected' : ''}`}
+            whileTap={{ scale: 0.82 }}
+            whileHover={{ scale: 1.08 }}
             aria-label={`${product.name} ${favorites.includes(product.id) ? 'favorilerden çıkar' : 'favorilere ekle'}`}
             aria-pressed={favorites.includes(product.id)}
             onClick={() => toggleFavorite(product.id)}
           >
             <Heart size={19} fill={favorites.includes(product.id) ? 'currentColor' : 'none'} />
-          </button>
+          </motion.button>
           <button className="quick-view" onClick={() => navigate('product', 'Tümü', product)}>
             Ürünü incele <ArrowUpRight size={17} />
           </button>
@@ -673,16 +675,16 @@ export default function Storefront({
         )}
         {view === 'home' && (
           <>
-            <section className="hero hero-city-campaign wrap">
+            <section className="hero hero-street-campaign">
               <picture>
                 <source
                   media="(max-width: 760px)"
-                  srcSet={sitePath('/images/mosso-city-editorial-mobile.webp')}
+                  srcSet={sitePath('/images/mosso-street-mobile.webp')}
                 />
                 <img
                   className="hero-photo"
                   src={sitePath(hero)}
-                  alt="Yağmur sonrası şehirde mor kaban ve krem takım ile yürüyen kadın"
+                  alt="Kafe sokağında krem trenç ve kırmızı ceketle yürüyen iki arkadaş"
                   fetchPriority="high"
                 />
               </picture>
@@ -692,26 +694,17 @@ export default function Storefront({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.65 }}
                 >
-                  <p className="eyebrow">MOS’SO / YENİ SEZON</p>
+                  <p className="eyebrow">YENİ SEZON / MOS’SO</p>
                   <h1>
-                    Tarzın,
+                    Hayatın içinde.
                     <br />
-                    <em>seninle güzel.</em>
+                    Kendin gibi.
                   </h1>
-                  <p className="hero-description">
-                    Bazen sade, bazen iddialı.
-                    <br />
-                    Her zaman kendin gibi.
-                  </p>
                   <button className="primary" onClick={() => navigate('collection')}>
                     Koleksiyonu keşfet <ArrowRight size={19} />
                   </button>
                 </motion.div>
               </div>
-              <span className="hero-caption">Birçok stil. Bir tek sen.</span>
-              <span className="hero-index">
-                01 <span>/ 01</span>
-              </span>
             </section>
             <div className="brand-strip wrap">
               <span>
@@ -720,6 +713,54 @@ export default function Storefront({
               <span>Günlükten özel günlere</span>
               <span>Her tarza bir yer var</span>
             </div>
+            <section className="street-editorials wrap" aria-label="Mos’so stil hikâyeleri">
+              {[
+                {
+                  image: '/images/mosso-stone-knit.webp',
+                  name: 'Yumuşak bir başlangıç.',
+                  label: 'ŞEHRİN SAKİN TARAFI',
+                  category: 'Üst Giyim',
+                  alt: 'Taş sokakta krem ajurlu triko ve ekru jean ile kadın',
+                },
+                {
+                  image: '/images/mosso-coast-shirt.webp',
+                  name: 'Biraz özgürlük.',
+                  label: 'GÜNÜN RİTMİNDE',
+                  category: 'Gömlek',
+                  alt: 'Sahil yolunda pembe gömlek ve beyaz şort ile kadın',
+                },
+              ].map((story, index) => (
+                <motion.button
+                  key={story.image}
+                  className="street-editorial"
+                  onClick={() => navigate('collection', story.category)}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.15 }}
+                  transition={{ duration: 0.6, delay: index * 0.08 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  <div className="street-editorial-photo">
+                    <img
+                      src={sitePath(story.image)}
+                      alt={story.alt}
+                      width={1122}
+                      height={1402}
+                      loading="lazy"
+                    />
+                  </div>
+                  <span className="street-editorial-copy">
+                    <span>
+                      <small>{story.label}</small>
+                      <strong>{story.name}</strong>
+                    </span>
+                    <span className="editorial-link">
+                      Keşfet <ArrowUpRight size={18} />
+                    </span>
+                  </span>
+                </motion.button>
+              ))}
+            </section>
             <section className="section wrap">
               <div className="section-heading">
                 <div>
@@ -737,9 +778,14 @@ export default function Storefront({
                   { name: 'Elbise', image: '/images/elbise.webp', sub: 'Tek parça, çok sen.' },
                   { name: 'Alt Giyim', image: '/images/denim.webp', sub: 'Her kombinin favorisi.' },
                 ].map((c) => (
-                  <button
+                  <motion.button
                     className="category-card"
                     key={c.name}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.15 }}
+                    transition={{ duration: 0.5 }}
+                    whileTap={{ scale: 0.985 }}
                     onClick={() => navigate('collection', c.name)}
                   >
                     <img src={sitePath(c.image)} alt={c.name} loading="lazy" />
@@ -752,7 +798,7 @@ export default function Storefront({
                         <ArrowUpRight size={21} />
                       </span>
                     </span>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </section>
