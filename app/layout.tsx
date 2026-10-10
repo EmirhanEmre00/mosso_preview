@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: "mos’so — Modern Original Style ' Stand Out",
   description: 'mos’so kadın giyim koleksiyonu. Günlük stilinden özel anlarına, kendin gibi giyin.',
   robots: { index: false, follow: false },
-  icons: { icon: sitePath('/favicon.svg') },
+  icons: { icon: sitePath('/favicon.svg?v=2') },
 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
