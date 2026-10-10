@@ -61,7 +61,7 @@ const REMEMBER_KEY = 'mosso-demo-remember-until';
 type CartRow = { id: string; size: string; color?: string; quantity: number };
 type View = 'home' | 'collection' | 'favorites' | 'product' | 'account' | 'checkout';
 const STORE_KEY = 'mosso-preview-v1';
-const hero = '/images/mosso-editorial.webp';
+const hero = '/images/mosso-city-editorial-desktop.webp';
 
 export default function Storefront({
   initialAccount,
@@ -673,16 +673,16 @@ export default function Storefront({
         )}
         {view === 'home' && (
           <>
-            <section className="hero wrap">
+            <section className="hero hero-city-campaign wrap">
               <picture>
                 <source
                   media="(max-width: 760px)"
-                  srcSet={sitePath('/images/mosso-editorial-mobile-overlay.webp')}
+                  srcSet={sitePath('/images/mosso-city-editorial-mobile.webp')}
                 />
                 <img
                   className="hero-photo"
                   src={sitePath(hero)}
-                  alt="Lila tunik ve başörtülü kadın ile beyaz tişört ve jean giyen kadın"
+                  alt="Yağmur sonrası şehirde mor kaban ve krem takım ile yürüyen kadın"
                   fetchPriority="high"
                 />
               </picture>

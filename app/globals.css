@@ -5157,3 +5157,51 @@ summary::-webkit-details-marker {
     overflow: hidden;
   }
 }
+
+/* Preview campaign: a full photographic hero with readable copy. */
+.hero-city-campaign {
+  background: #262127;
+}
+.hero-city-campaign h1,
+.hero-city-campaign .hero-description {
+  color: #fffaf5;
+}
+.hero-city-campaign h1 em,
+.hero-city-campaign .eyebrow {
+  color: #efd6f2;
+}
+.hero-city-campaign .hero-index,
+.hero-city-campaign .hero-index span {
+  color: #fffaf5;
+}
+@media (max-width: 760px) {
+  .hero-city-campaign .hero-copy {
+    inset: 0;
+    height: 100%;
+    padding: 20px;
+  }
+  .hero-city-campaign .hero-copy > div {
+    position: relative;
+    height: 100%;
+  }
+  .hero-city-campaign .hero-copy .eyebrow {
+    margin: 0 0 8px;
+  }
+  .hero-city-campaign h1 {
+    font-size: clamp(28px, 8vw, 36px);
+    line-height: 1.08;
+    letter-spacing: -1px;
+    margin: 0;
+    text-shadow: 0 2px 12px #0007;
+  }
+  .hero-city-campaign .hero-description,
+  .hero-city-campaign .hero-caption {
+    display: none;
+  }
+  .hero-city-campaign .hero-copy .primary {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    box-shadow: 0 4px 20px #0003;
+  }
+}

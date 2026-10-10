@@ -107,10 +107,17 @@ test('mobile portrait hero and footer preserve access to all content', async ({ 
   const footer = page.getByRole('contentinfo');
   const before = await footer.boundingBox();
   const photo = await page.locator('.hero-photo').boundingBox();
-  const copy = await page.locator('.hero-copy').boundingBox();
+  await expect
+    .poll(() => page.locator('.hero-photo').evaluate((image: HTMLImageElement) => image.currentSrc))
+    .toContain('/images/mosso-city-editorial-mobile.webp');
   expect(photo!.height / photo!.width).toBeCloseTo(16 / 9, 2);
   expect(photo!.y).toBeCloseTo(hero!.y, 0);
-  expect(copy!.y + copy!.height).toBeLessThan(photo!.y + photo!.height / 2);
+  await expect
+    .poll(async () => {
+      const box = await page.locator('.hero h1').boundingBox();
+      return box!.y + box!.height;
+    })
+    .toBeLessThan(photo!.y + photo!.height * 0.23);
   expect(photo!.y + photo!.height).toBeCloseTo(hero!.y + hero!.height, 0);
   expect(before!.height).toBeLessThan(380);
   const toggle = footer.getByRole('button', { name: 'Koleksiyonu keşfet' });
