@@ -9,9 +9,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
   icons: {
     icon: [
-      { url: sitePath('/favicon-circle-outline-16.png'), type: 'image/png', sizes: '16x16' },
-      { url: sitePath('/favicon-circle-outline-32.png'), type: 'image/png', sizes: '32x32' },
-      { url: sitePath('/favicon-circle-outline-64.png'), type: 'image/png', sizes: '64x64' },
+      { url: sitePath('/favicon-circle-spaced-16.png'), type: 'image/png', sizes: '16x16' },
+      { url: sitePath('/favicon-circle-spaced-32.png'), type: 'image/png', sizes: '32x32' },
+      { url: sitePath('/favicon-circle-spaced-64.png'), type: 'image/png', sizes: '64x64' },
     ],
   },
 };
