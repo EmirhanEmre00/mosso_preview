@@ -8,7 +8,11 @@ export const metadata: Metadata = {
   description: 'mos’so kadın giyim koleksiyonu. Günlük stilinden özel anlarına, kendin gibi giyin.',
   robots: { index: false, follow: false },
   icons: {
-    icon: { url: sitePath('/favicon-rounded-solid.png'), type: 'image/png', sizes: '64x64' },
+    icon: [
+      { url: sitePath('/favicon-circle-16.png'), type: 'image/png', sizes: '16x16' },
+      { url: sitePath('/favicon-circle-32.png'), type: 'image/png', sizes: '32x32' },
+      { url: sitePath('/favicon-circle-64.png'), type: 'image/png', sizes: '64x64' },
+    ],
   },
 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
