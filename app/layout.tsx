@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
   icons: {
     icon: {
-      url: sitePath('/images/ms-favicon-centered.png'),
+      url: sitePath('/images/ms-favicon-max-black-ring.png'),
       type: 'image/png',
       sizes: '1254x1254',
     },
