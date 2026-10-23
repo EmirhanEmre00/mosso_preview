@@ -24,7 +24,7 @@ jobs:
         env:
           GITHUB_PAGES: 'true'
           NEXT_PUBLIC_SUPPORT_FORM_ENDPOINT: ${{ vars.NEXT_PUBLIC_SUPPORT_FORM_ENDPOINT }}
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: out
   deploy:
